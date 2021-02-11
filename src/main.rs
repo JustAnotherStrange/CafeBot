@@ -22,7 +22,7 @@ use serenity::{
 struct Handler;
 
 #[group]
-#[commands(say, ping, count, hair)]
+#[commands(say, ping, count, hair, help)]
 struct General;
 
 #[async_trait]
@@ -156,4 +156,20 @@ async fn hair(ctx: &Context, msg: &Message) -> CommandResult {
 fn gen_hairlevel() -> i32 {
     let mut rng = rand::thread_rng();
     return rng.gen_range(0..101);
+}
+
+#[command]
+#[only_in(guilds)]
+async fn help(ctx: &Context, msg: &Message) -> CommandResult {
+    let response = MessageBuilder::new()
+        .push_bold_safe("Welcome to CafeBot!\n \n")
+        .push("Commands:\n")
+        .push("^help - show help page\n")
+        .push("^ping - pong\n")
+        .push("^say - repeat anything that comes after this command\n")
+        .push("^count - count as high as you can\n")
+        .push("^hair - see how bald you are\n")
+        .build();
+    msg.channel_id.say(&ctx.http, &response).await?;
+    Ok(())
 }
