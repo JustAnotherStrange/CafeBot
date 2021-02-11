@@ -2,10 +2,12 @@
 // make it create the "count" and "log" files if they don't already exist.
 // also make it be able to start the count command from 1 if there is nothing currently in the file
 // these two things go together
+// add ^hair command
 use std::env;
 use std::fs;
 use std::io::prelude::*;
 use std::fs::OpenOptions;
+use rand::Rng;
 
 use serenity::{
     async_trait,
@@ -24,7 +26,7 @@ use serenity::{
 struct Handler;
 
 #[group]
-#[commands(say, ping, count)]
+#[commands(say, ping, count, hair)]
 struct General;
 
 #[async_trait]
@@ -128,4 +130,23 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
     fs::write("./count", to_write_final).expect("Failed to write to file");
     msg.channel_id.say(&ctx.http, &to_write).await?;
     Ok(())
+}
+
+#[command]
+#[only_in(guilds)]
+async fn hair(ctx: &Context, msg: &Message) -> CommandResult {
+    let hairlevel = gen_hairlevel();
+    let response = MessageBuilder::new()
+        .push_bold_safe(&msg.author.name)
+        .push(" has a bald level of ")
+        .push_bold_safe(&hairlevel)
+        .push("%.")
+        .build();
+    msg.channel_id.say(&ctx.http, &response).await?;
+    Ok(())
+}
+
+fn gen_hairlevel() -> i32 {
+    let mut rng = rand::thread_rng();
+    return rng.gen_range(0..101);
 }
