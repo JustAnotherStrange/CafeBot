@@ -145,15 +145,26 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
 #[only_in(guilds)]
 #[aliases("bald")]
 async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    // let settings = ContentSafeOptions::default();
     let hairlevel = gen_hairlevel();
-    let content = &args.rest();
-    let response = MessageBuilder::new()
-        .push_bold_safe(&content)
-        .push(" has ")
-        .push_bold_safe(&hairlevel)
-        .push("% hair.")
-        .build();
-    msg.channel_id.say(&ctx.http, &response).await?;
+    let content = args.rest();
+    if content == "" {
+        let response = MessageBuilder::new()
+            .push_bold_safe(&msg.author.name)
+            .push(" has ")
+            .push_bold_safe(&hairlevel)
+            .push("% hair.")
+            .build();
+        msg.channel_id.say(&ctx.http, &response).await?;
+    } else {
+        let response = MessageBuilder::new()
+            .push_bold_safe(&content)
+            .push(" has ")
+            .push_bold_safe(&hairlevel)
+            .push("% hair.")
+            .build();
+        msg.channel_id.say(&ctx.http, &response).await?;
+    }
     Ok(())
 }
 
