@@ -1,5 +1,7 @@
 // TODO:
 // add the 57 precepts of zote
+// add it so the bald command lets you ping someone as an argument and it does it for them if you
+// have it with the argument, and does it for the message author without an argument
 use std::env;
 use std::fs;
 use std::io::prelude::*;
@@ -91,7 +93,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         msg.channel_id.say(&ctx.http, &content).await?;
     }
     if !(std::path::Path::new("log").exists()) {
-        let file = fs::File::create("log")?;
+        let _file = fs::File::create("log")?;
     }
     let mut file = OpenOptions::new()
         .write(true)
