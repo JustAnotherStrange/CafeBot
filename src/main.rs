@@ -151,43 +151,39 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
 async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let args_string = args.rest();
     // let zote_test: i32 = args_string.parse() {
+    let zote_line: usize;
     if args_string == "random" {
-        let zote_line = gen_random_zote();
-        if zote_line > 57 {
-            msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?;
-        } else {
-            // take that line of the zote file and print it.
-            let filename = "zote";
-            let file = File::open(filename).expect("failed to open file");
-            let reader = BufReader::new(file);
-            for (index, line) in reader.lines().enumerate() {
-                let line = line.unwrap(); // Ignore errors.
-                // Show the line and its number.
-                if index + 1 == zote_line {
-                    msg.channel_id.say(&ctx.http, &line).await?;
-                    break;
-                }
+        zote_line = gen_random_zote();
+    } else if args_string == "all" {
+        zote_line = 101;
+    } else {
+        zote_line = args_string.parse().unwrap_or(100);
+    }
+    if zote_line == 101 {
+        // print all
+        let filename = "zote";
+        let file = File::open(filename).expect("failed to open file");
+        let reader = BufReader::new(file);
+        for (index, line) in reader.lines().enumerate() {
+            let line = line.unwrap();
+            msg.channel_id.say(&ctx.http, &line).await?;
+            if index + 1 == 57 {
+                break;
             }
         }
+    } else if zote_line > 57 {
+        msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?;
     } else {
-        let zote_line: usize = match args_string.parse() {
-            Ok(line) => line,
-            Err(_error) => 100,
-        };
-        if zote_line > 57 {
-            msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?;
-        } else {
-            // take that line of the zote file and print it.
-            let filename = "zote";
-            let file = File::open(filename).expect("failed to open file");
-            let reader = BufReader::new(file);
-            for (index, line) in reader.lines().enumerate() {
-                let line = line.unwrap(); // Ignore errors.
-                // Show the line and its number.
-                if index + 1 == zote_line {
-                    msg.channel_id.say(&ctx.http, &line).await?;
-                    break;
-                }
+        // take that line of the zote file and print it.
+        let filename = "zote";
+        let file = File::open(filename).expect("failed to open file");
+        let reader = BufReader::new(file);
+        for (index, line) in reader.lines().enumerate() {
+            let line = line.unwrap(); // Ignore errors.
+            // Show the line and its number.
+            if index + 1 == zote_line {
+                msg.channel_id.say(&ctx.http, &line).await?;
+                break;
             }
         }
     };
