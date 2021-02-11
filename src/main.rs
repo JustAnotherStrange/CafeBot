@@ -1,3 +1,5 @@
+// TODO:
+// make it create the "count" and "log" files if they don't already exist.
 use std::env;
 use std::fs;
 use std::io::prelude::*;
