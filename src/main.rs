@@ -1,5 +1,5 @@
 // TODO:
-// add the 57 precepts of zote
+#![allow(non_snake_case)]
 use std::env;
 use std::fs;
 use std::fs::File;
@@ -18,7 +18,7 @@ use serenity::{
             macros::{command, group},
         },
     },
-    model::{channel::Message, gateway::Ready}, // misc::Mentionable},
+    model::{channel::Message, gateway::Ready},
     // prelude::*,
     utils::{MessageBuilder, content_safe, ContentSafeOptions},
 };
@@ -34,6 +34,7 @@ impl EventHandler for Handler {
         println!("{} is connected!", ready.user.name);
     }
     async fn message(&self, ctx: Context, msg: Message) {
+        // ----- subreddit detecting and linking ----- 
         let mut sub_reddit = String::new();
         if !(msg.content.to_lowercase().contains("://reddit.com")) {
             if let Some(l) = &msg.content.find("r/") {
@@ -51,6 +52,8 @@ impl EventHandler for Handler {
                 }
             }
         }
+        // ----- end subreddit detecting -----
+        
     }
 }
 
@@ -150,7 +153,7 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // let zote_test: i32 = args_string.parse() {
     if args_string == "random" {
         let zote_line = gen_random_zote();
-        if zote_line > 57 || zote_line < 0 {
+        if zote_line > 57 {
             msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?;
         } else {
             // take that line of the zote file and print it.
@@ -169,9 +172,9 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     } else {
         let zote_line: usize = match args_string.parse() {
             Ok(line) => line,
-            Err(error) => 100,
+            Err(_error) => 100,
         };
-        if zote_line > 57 || zote_line < 0 {
+        if zote_line > 57 {
             msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?;
         } else {
             // take that line of the zote file and print it.
