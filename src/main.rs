@@ -23,7 +23,7 @@ use serenity::{
 struct Handler;
 
 #[group]
-#[commands(say, ping, count, hair, help)]
+#[commands(say, ping, count, hair, help, zote)]
 struct General;
 
 #[async_trait]
@@ -138,6 +138,24 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
     let to_write_final = String::new() + to_write_string.as_str() + "\n";
     fs::write("./count", to_write_final).expect("Failed to write to file");
     msg.channel_id.say(&ctx.http, &to_write).await?;
+    Ok(())
+}
+
+#[command]
+#[only_in(guilds)]
+async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let args_string = &args.rest();
+    // let zote_test: i32 = args_string.parse() {
+    let zote_line: i32 = match args_string.parse() {
+        Ok(line) => line,
+        Err(error) => 100,
+    };
+    if zote_line > 57 {
+        msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57").await?;
+    } else {
+        // take that line of the zote file and print it.
+        msg.channel_id.say(&ctx.http, "This part is incomplete. Here it would print a precept of zote").await?;
+    }
     Ok(())
 }
 
