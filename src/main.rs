@@ -2,7 +2,9 @@
 // add the 57 precepts of zote
 use std::env;
 use std::fs;
+use std::fs::File;
 use std::io::prelude::*;
+use std::io::{BufRead, BufReader};
 use std::fs::OpenOptions;
 use rand::Rng;
 
@@ -146,7 +148,7 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
 async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let args_string = &args.rest();
     // let zote_test: i32 = args_string.parse() {
-    let zote_line: i32 = match args_string.parse() {
+    let zote_line: usize = match args_string.parse() {
         Ok(line) => line,
         Err(error) => 100,
     };
@@ -154,7 +156,17 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?;
     } else {
         // take that line of the zote file and print it.
-        msg.channel_id.say(&ctx.http, "This part is incomplete. Here it would print a precept of zote").await?;
+        let filename = "zote";
+        let file = File::open(filename).expect("failed to open file");
+        let reader = BufReader::new(file);
+        for (index, line) in reader.lines().enumerate() {
+            let line = line.unwrap(); // Ignore errors.
+            // Show the line and its number.
+            if index + 1 == zote_line {
+                msg.channel_id.say(&ctx.http, &line).await?;
+                break;
+            }
+        }
     }
     Ok(())
 }
