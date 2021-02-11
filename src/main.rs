@@ -1,5 +1,7 @@
 // TODO:
 // make it create the "count" and "log" files if they don't already exist.
+// also make it be able to start the count command from 1 if there is nothing currently in the file
+// these two things go together
 use std::env;
 use std::fs;
 use std::io::prelude::*;
