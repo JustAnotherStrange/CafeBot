@@ -150,8 +150,8 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         Ok(line) => line,
         Err(error) => 100,
     };
-    if zote_line > 57 {
-        msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57").await?;
+    if zote_line > 57 || zote_line < 0 {
+        msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?;
     } else {
         // take that line of the zote file and print it.
         msg.channel_id.say(&ctx.http, "This part is incomplete. Here it would print a precept of zote").await?;
