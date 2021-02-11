@@ -1,8 +1,4 @@
 // TODO:
-// make it create the "count" and "log" files if they don't already exist.
-// also make it be able to start the count command from 1 if there is nothing currently in the file
-// these two things go together
-// add ^hair command
 use std::env;
 use std::fs;
 use std::io::prelude::*;
@@ -93,6 +89,9 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     } else {
         msg.channel_id.say(&ctx.http, &content).await?;
     }
+    if !(std::path::Path::new("log").exists()) {
+        let file = fs::File::create("log")?;
+    }
     let mut file = OpenOptions::new()
         .write(true)
         .append(true)
@@ -120,7 +119,15 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[only_in(guilds)]
 async fn count(ctx: &Context, msg: &Message) -> CommandResult {
+    // check if file doesn't exist and then create it if it doesn't
+    if !(std::path::Path::new("count").exists()) {
+        let _file = fs::File::create("count")?;
+    }
     let mut file = fs::read_to_string("./count").expect("Unable to read file.");
+    if file == "" {
+        let to_write_final = String::new() + "0" + "\n";
+        fs::write("./count", to_write_final).expect("Failed to write to file");
+    }
     let len = file.len();
     file.truncate(len - 1);
     let file_int: i32 = file.parse().expect("Failed to parse file string into integer");
