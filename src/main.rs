@@ -1,4 +1,5 @@
 // TODO:
+// add the 57 precepts of zote
 use std::env;
 use std::fs;
 use std::io::prelude::*;
@@ -141,13 +142,14 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 #[only_in(guilds)]
+#[aliases("bald")]
 async fn hair(ctx: &Context, msg: &Message) -> CommandResult {
     let hairlevel = gen_hairlevel();
     let response = MessageBuilder::new()
         .push_bold_safe(&msg.author.name)
-        .push(" has a bald level of ")
+        .push(" has ")
         .push_bold_safe(&hairlevel)
-        .push("%.")
+        .push("% hair.")
         .build();
     msg.channel_id.say(&ctx.http, &response).await?;
     Ok(())
@@ -168,7 +170,7 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
         .push("^ping - pong\n")
         .push("^say - repeat anything that comes after this command\n")
         .push("^count - count as high as you can\n")
-        .push("^hair - see how bald you are\n")
+        .push("^hair - see how bald you are (also ^bald) \n")
         .build();
     msg.channel_id.say(&ctx.http, &response).await?;
     Ok(())
