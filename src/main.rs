@@ -145,6 +145,8 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 #[only_in(guilds)]
+// TODO:
+// add ^zote random
 async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let args_string = &args.rest();
     // let zote_test: i32 = args_string.parse() {
