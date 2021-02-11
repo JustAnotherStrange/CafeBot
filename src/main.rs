@@ -107,6 +107,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .push("\n")
         .build();
     file.write_all(content_to_append.as_bytes()).expect("failed to write content to log file");
+    msg.delete(&ctx.http).await?;
     Ok(())
 }
 
