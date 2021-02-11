@@ -1,7 +1,5 @@
 // TODO:
 // add the 57 precepts of zote
-// add it so the bald command lets you ping someone as an argument and it does it for them if you
-// have it with the argument, and does it for the message author without an argument
 use std::env;
 use std::fs;
 use std::io::prelude::*;
@@ -146,14 +144,36 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[only_in(guilds)]
 #[aliases("bald")]
-async fn hair(ctx: &Context, msg: &Message) -> CommandResult {
+async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let hairlevel = gen_hairlevel();
+    let settings = if let Some(guild_id) = msg.guild_id {
+        ContentSafeOptions::default()
+            .clean_channel(false)
+            .display_as_member_from(guild_id)
+    } else {
+        ContentSafeOptions::default()
+            .clean_channel(false)
+            .clean_role(false)
+    };
+    let content = content_safe(&ctx.cache, &args.rest(), &settings).await;
     let response = MessageBuilder::new()
-        .push_bold_safe(&msg.author.name)
-        .push(" has ")
-        .push_bold_safe(&hairlevel)
-        .push("% hair.")
+        .push("this shouldn't be said. something has gone wrong with the content if statement.")
         .build();
+    if content == "" {
+        let response = MessageBuilder::new()
+            .push_bold_safe(&msg.author.name)
+            .push(" has ")
+            .push_bold_safe(&hairlevel)
+            .push("% hair.")
+            .build();
+    } else { 
+        let response = MessageBuilder::new()
+            .push_bold_safe(&content)
+            .push(" has ")
+            .push_bold_safe(&hairlevel)
+            .push("% hair.")
+            .build();
+    };
     msg.channel_id.say(&ctx.http, &response).await?;
     Ok(())
 }
