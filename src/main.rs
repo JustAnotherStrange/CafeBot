@@ -1,4 +1,5 @@
 // TODO:
+// make discord status "serving coffee" or something similar.
 #![allow(non_snake_case)]
 use std::env;
 use std::fs;
@@ -17,20 +18,22 @@ use serenity::{
             macros::{command, group},
         },
     },
-    model::{channel::Message, gateway::Ready},
+    model::{channel::Message, gateway::{Ready, Activity}, user::OnlineStatus},
     // prelude::*,
     utils::{MessageBuilder, content_safe, ContentSafeOptions},
 };
 struct Handler;
 
 #[group]
-#[commands(say, ping, count, hair, help, zote, sarcasm)]
+#[commands(say, ping, count, hair, help, zote, sarcasm, status)]
 struct General;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn ready(&self, _: Context, ready: Ready) { // inform when connected
+    async fn ready(&self, ctx: Context, ready: Ready) { // inform when connected
         println!("Connected as {}", ready.user.name);
+        let activity = Activity::playing("vid eo g ame s"); // other Activity::* - listening, competing, streaming
+        ctx.set_presence(Some(activity), OnlineStatus::Online).await; // set status to "Playing vid eo g ame s"
     }
     async fn message(&self, ctx: Context, msg: Message) {
         // ----- subreddit detecting and linking by g_w1 ----- 
@@ -273,6 +276,24 @@ async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 fn gen_hairlevel() -> i32 {
     let mut rng = rand::thread_rng();
     rng.gen_range(0..101)
+}
+#[command]
+#[only_in(guilds)]
+async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    if msg.author.id == 556940315802599436 {
+        let name = args.message();
+        ctx.set_activity(Activity::playing(&name)).await;
+        let response = MessageBuilder::new()
+            .push("Status has been set to ")
+            .push_bold_safe("Playing")
+            .push(" ")
+            .push_bold_safe(&name)
+            .build();
+        msg.channel_id.say(&ctx.http, &response).await?;
+    } else {
+        msg.channel_id.say(&ctx.http, "Only Owen can run this command. Baldo.").await?;
+    }
+    Ok(())
 }
 
 #[command]

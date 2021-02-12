@@ -1,8 +1,8 @@
 #!/bin/sh
 
-cargo build
+cargo build --release
 # auto restart
 while true;
-    do ./target/debug/CafeBot
+    do ./target/release/CafeBot
 done
 
