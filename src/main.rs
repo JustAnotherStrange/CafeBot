@@ -1,16 +1,14 @@
 // TODO:
-// instead of hardcoding my user id, use serenity's built in "owner" feature and make a new command
-// group if necessary, where i specify owner ids in the framework declaration
 #![allow(non_snake_case)] // because of CafeBot name of crate
 use std::{
     env, 
     fs, fs::{File, OpenOptions}, 
-    io::{BufRead, BufReader}, // prelude::*
+    io::{BufRead, BufReader, prelude::*},
     time::{SystemTime, UNIX_EPOCH},
     // collections::{HashMap, HashSet}, fmt::Write, sync::Arc
 };
 
-use rand::Rng;
+use rand::{thread_rng, Rng};
 
 use serenity::{
     async_trait,
@@ -53,9 +51,9 @@ impl EventHandler for Handler {
     }
     async fn message(&self, ctx: Context, msg: Message) {
         // ----- subreddit detecting and linking by g_w1 ----- 
-        let mut sub_reddit = String::new();
         if !(msg.content.to_lowercase().contains("://reddit.com")) {
             if let Some(l) = &msg.content.find("r/") {
+                let mut sub_reddit = String::new();
                 for (i,c) in msg.content.chars().into_iter().enumerate() {
                     if i < *l + 2 { // + 2 because of r/
                         continue;
@@ -126,13 +124,13 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .clean_role(false)
     };
     let content = content_safe(&ctx.cache, &args.rest(), &settings).await; // this content safety returns @invalid-user for every user ping weirdly
-    msg.channel_id.say(&ctx.http, &content).await?; 
     msg.delete(&ctx.http).await?;
+    msg.channel_id.say(&ctx.http, &content).await?; 
     if !(std::path::Path::new("log").exists()) {
-        let _file = fs::File::create("log")?; // create log file if it doesn't already exist
+        fs::File::create("log")?; // create log file if it doesn't already exist
     }
     // logging ---- 
-    let _file = OpenOptions::new()
+    let mut file = OpenOptions::new()
         .read(true)
         .write(true)
         .append(true)
@@ -140,7 +138,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .expect("failed to open log file");
     let start = SystemTime::now();
     let unixtime = start.duration_since(UNIX_EPOCH).expect("Time went backwards");
-    let _content_to_log = MessageBuilder::new()
+    let content_to_log = MessageBuilder::new()
         .push("at ")
         .push(unixtime.as_secs())
         .push(": ")
@@ -151,8 +149,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .push(msg.channel_id)
         .push("\n")
         .build();
-    // file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file"); 
-    // ---- FIX THIS. above is to write to log file. somehow this errors even though it didn't recently. any ideas anyone? 
+    file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file"); 
     Ok(())
 }
 #[command]
@@ -194,7 +191,7 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 // uses a "./count" file in the crate's root directory.
 async fn count(ctx: &Context, msg: &Message) -> CommandResult {
     if !(std::path::Path::new("count").exists()) {
-        let _file = fs::File::create("count")?; // create the count file if it doesn't already exist
+        fs::File::create("count")?; // create the count file if it doesn't already exist
     }
     let mut file = fs::read_to_string("./count").expect("Unable to read file.");
     // write "0" to file if the file is empty
@@ -220,22 +217,19 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
 // Uses a file in the crate's root directory "./zote" should have been pulled as apart of git clone.
 async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let args_string = args.rest();
-    let zote_line: usize; // usize because it's an indicator for what line to read from in the file
-    if args_string == "random" {
-        zote_line = gen_random_zote();
-    } else if args_string == "all" {
-        zote_line = 101; // 101 is an indicator to print all 57. probably a better way to do this, idk.
+    let zote_line = if args_string == "random" {
+        thread_rng().gen_range(0..58)
     } else {
         // if the argument can't be parsed into usize, then set the line num to 100,
         // which will trigger the "please enter a number" message.
-        zote_line = args_string.parse().unwrap_or(100); 
-    }
-    if zote_line == 101 {
+        args_string.parse().unwrap_or(100)
+    };
+    if args_string == "all" {
         // print all precepts
         let filename = "zote";
         let file = File::open(filename).expect("failed to open file");
         let reader = BufReader::new(file);
-        for (_index, line) in reader.lines().enumerate() {
+        for line in reader.lines() {
             let line = line.unwrap();
             // Say the line along with a zote emoji from CyberCafe.
             let response = MessageBuilder::new()
@@ -252,8 +246,8 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         let file = File::open(filename).expect("failed to open file");
         let reader = BufReader::new(file);
         for (index, line) in reader.lines().enumerate() {
-            let line = line.unwrap(); 
             if index + 1 == zote_line {
+                let line = line.unwrap(); 
                 // Say the line along with a zote emoji from CyberCafe.
                 let response = MessageBuilder::new()
                     .push("<:zote:809592148805681193> ")
@@ -263,12 +257,8 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 break;
             }
         }
-    };
+    }
     Ok(())
-}
-fn gen_random_zote() -> usize { // again, usize because it's an indicator for a line number
-    let mut rng = rand::thread_rng();
-    rng.gen_range(0..58)
 }
 
 #[command]
@@ -277,35 +267,18 @@ fn gen_random_zote() -> usize { // again, usize because it's an indicator for a 
 // baldness calculator (actually just a random number generator).
 // You can also specify who to test (e.g. ^bald @joe)
 async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    let hairlevel = gen_hairlevel();
+    let hairlevel = thread_rng().gen_range(0..101);
     let args_string = args.rest();
-    if args_string == "" { // if there is no argument
-        // build a message where it says something like:
-        // "@joe has 23% hair."
-        let response = MessageBuilder::new()
-            .push_bold_safe(&msg.author.name) // since there is no argument, just use the name of the author of the message for who is to be tested.
-            .push(" has ")
-            .push_bold_safe(&hairlevel)
-            .push("% hair.")
-            .build();
-        msg.channel_id.say(&ctx.http, &response).await?;
-    } else {
-        // similarly build a message.
-        let response = MessageBuilder::new()
-            .push_bold_safe(&args_string) // use the arguments for the person to be tested
-            .push(" has ")
-            .push_bold_safe(&hairlevel)
-            .push("% hair.")
-            .build();
-        msg.channel_id.say(&ctx.http, &response).await?;
-    }
+    let response = MessageBuilder::new()
+        .push_bold_safe(if args_string == "" { &msg.author.name } else { args_string }) // use the arguments for the person to be tested
+        .push(" has ")
+        .push_bold_safe(&hairlevel)
+        .push("% hair.")
+        .build();
+    msg.channel_id.say(&ctx.http, &response).await?;
     Ok(())
 }
 
-fn gen_hairlevel() -> i32 {
-    let mut rng = rand::thread_rng();
-    rng.gen_range(0..101)
-}
 #[command]
 #[only_in(guilds)]
 async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
@@ -357,19 +330,16 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
                 // if you have reached here, you are admin. now do the command.
                 let say_content = if let Ok(slow_mode_rate_seconds) = args.single::<u64>() {
                     if let Err(why) = msg.channel_id.edit(&ctx.http, |c| c.slow_mode_rate(slow_mode_rate_seconds)).await {
-                        println!("Error setting channel's slow mode rate: {:?}", why);
-                        format!("Failed to set slow mode to `{}` seconds.", slow_mode_rate_seconds)
+                        format!("Failed to set slow mode to `{}` seconds. because {}", slow_mode_rate_seconds, why)
                     } else {
                         format!("Successfully set slow mode rate to `{}` seconds.", slow_mode_rate_seconds)
                     }
                 } else if let Some(Channel::Guild(channel)) = msg.channel_id.to_channel_cached(&ctx.cache).await {
                     format!("Current slow mode rate is `{}` seconds.", channel.slow_mode_rate.unwrap_or(0))
                 } else {
-                    println!("cache fail");
                     "Failed to find channel in cache.".to_string()
                 };
                 msg.channel_id.say(&ctx.http, say_content).await?;
-                return Ok(());
             }
         }
     }
@@ -393,9 +363,9 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .push("^count - count as high as you can\n")
             .push("^hair - see how bald you are (also ^bald) \n")
             .push("^zote - find precepts of zote. ^zote [number] for a specific precept, and ^zote random for a random one.\n")
+            .push("^help admin - admin help\n")
             .build();
         msg.channel_id.say(&ctx.http, &response).await?;
-        return Ok(());
     } else if args_string == "admin" {
         if let Some(member) = &msg.member {
             for role in &member.roles {
@@ -407,14 +377,12 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                         .push("^slow_mode [seconds] - set the slow mode in that channel to a certain amount of seconds. Set to 0 to turnoff slow mode.\n")
                         .build();
                     msg.channel_id.say(&ctx.http, &response).await?;
-                    return Ok(());
                 }
             }
         }
         msg.channel_id.say(&ctx.http, "You can't access this help page").await?;
-        return Ok(())
     } else {
         msg.channel_id.say(&ctx.http, "Please enter either no category for general help or one of these categories: admin.").await?;
-        return Ok(())
     }
+    Ok(())
 }
