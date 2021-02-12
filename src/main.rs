@@ -1,4 +1,5 @@
 // TODO:
+// add more logging
 #![allow(non_snake_case)]
 use std::env;
 use std::fs;
@@ -7,6 +8,8 @@ use std::io::prelude::*;
 use std::io::{BufRead, BufReader};
 use std::fs::OpenOptions;
 use rand::Rng;
+use std::time::{SystemTime, UNIX_EPOCH};
+
 
 use serenity::{
     async_trait,
@@ -95,6 +98,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     } else {
         msg.channel_id.say(&ctx.http, &content).await?;
     }
+    msg.delete(&ctx.http).await?;
     if !(std::path::Path::new("log").exists()) {
         let _file = fs::File::create("log")?;
     }
@@ -103,7 +107,14 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .append(true)
         .open("log")
         .expect("failed to open log file");
-    let content_to_append = MessageBuilder::new()
+    let start = SystemTime::now();
+    let unixtime = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+    let content_to_log = MessageBuilder::new()
+        .push("at ")
+        .push(unixtime.as_secs())
+        .push(": ")
         .push(content)
         .push(" written by ")
         .push(&msg.author.name)
@@ -111,8 +122,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .push(msg.channel_id) // time
         .push("\n")
         .build();
-    file.write_all(content_to_append.as_bytes()).expect("failed to write content to log file");
-    msg.delete(&ctx.http).await?;
+    file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file");
     Ok(())
 }
 
@@ -120,6 +130,26 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 #[only_in(guilds)]
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     msg.channel_id.say(&ctx.http, "pong").await?;
+    // Example Log code. I could move it to a function because its pretty chonky. We'll see.
+    // let mut file = OpenOptions::new()
+    //     .write(true)
+    //     .append(true)
+    //     .open("log")
+    //     .expect("failed to open log file");
+    // let start = SystemTime::now();
+    // let unixtime = start
+    //     .duration_since(UNIX_EPOCH)
+    //     .expect("Time went backwards");
+    // let content_to_log = MessageBuilder::new()
+    //     .push("at ")
+    //     .push(unixtime.as_secs())
+    //     .push(": ")
+    //     .push(&msg.author.name)
+    //     .push(" used the ping command in ")
+    //     .push(msg.channel_id) // time
+    //     .push("\n")
+    //     .build();
+    // file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file");
     Ok(())
 }
 
@@ -164,12 +194,13 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         let filename = "zote";
         let file = File::open(filename).expect("failed to open file");
         let reader = BufReader::new(file);
-        for (index, line) in reader.lines().enumerate() {
+        for (_index, line) in reader.lines().enumerate() {
             let line = line.unwrap();
-            msg.channel_id.say(&ctx.http, &line).await?;
-            if index + 1 == 57 {
-                break;
-            }
+            let response = MessageBuilder::new()
+                .push("<:zote:809592148805681193> ")
+                .push(&line)
+                .build();
+            msg.channel_id.say(&ctx.http, &response).await?;
         }
     } else if zote_line > 57 {
         msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?;
@@ -182,7 +213,11 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             let line = line.unwrap(); // Ignore errors.
             // Show the line and its number.
             if index + 1 == zote_line {
-                msg.channel_id.say(&ctx.http, &line).await?;
+                let response = MessageBuilder::new()
+                    .push("<:zote:809592148805681193> ")
+                    .push(&line)
+                    .build();
+                msg.channel_id.say(&ctx.http, &response).await?;
                 break;
             }
         }
@@ -237,6 +272,7 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
         .push("^say - repeat anything that comes after this command\n")
         .push("^count - count as high as you can\n")
         .push("^hair - see how bald you are (also ^bald) \n")
+        .push("^zote - find precepts of zote. ^zote [number] for a specific precept, and ^zote random for a random one.\n")
         .build();
     msg.channel_id.say(&ctx.http, &response).await?;
     Ok(())
