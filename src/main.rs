@@ -157,26 +157,6 @@ fn sarcastify(s: &str) -> String {
 #[only_in(guilds)]
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     msg.channel_id.say(&ctx.http, "pong").await?;
-    // Example Log code. I could move it to a function because its pretty chonky. We'll see.
-    // let mut file = OpenOptions::new()
-    //     .write(true)
-    //     .append(true)
-    //     .open("log")
-    //     .expect("failed to open log file");
-    // let start = SystemTime::now();
-    // let unixtime = start
-    //     .duration_since(UNIX_EPOCH)
-    //     .expect("Time went backwards");
-    // let content_to_log = MessageBuilder::new()
-    //     .push("at ")
-    //     .push(unixtime.as_secs())
-    //     .push(": ")
-    //     .push(&msg.author.name)
-    //     .push(" used the ping command in ")
-    //     .push(msg.channel_id) // time
-    //     .push("\n")
-    //     .build();
-    // file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file");
     Ok(())
 }
 
