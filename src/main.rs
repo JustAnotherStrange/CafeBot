@@ -380,18 +380,41 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
 #[only_in(guilds)]
 // Simple help command. 
 // I tried to make it use embeds but it was a hassle and didn't work after a lot of debugging.
-async fn help(ctx: &Context, msg: &Message) -> CommandResult {
+async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // build the message
-    let response = MessageBuilder::new()
-        .push_bold_safe("Welcome to CafeBot!\n \n")
-        .push("Commands:\n")
-        .push("^help - show help page\n")
-        .push("^ping - pong\n")
-        .push("^say - repeat anything that comes after this command\n")
-        .push("^count - count as high as you can\n")
-        .push("^hair - see how bald you are (also ^bald) \n")
-        .push("^zote - find precepts of zote. ^zote [number] for a specific precept, and ^zote random for a random one.\n")
-        .build();
-    msg.channel_id.say(&ctx.http, &response).await?;
-    Ok(())
+    let args_string = args.rest();
+    if args_string == "" {
+        let response = MessageBuilder::new()
+            .push_bold_safe("Welcome to CafeBot!\n \n")
+            .push("Commands:\n")
+            .push("^help - show help page\n")
+            .push("^ping - pong\n")
+            .push("^say - repeat anything that comes after this command\n")
+            .push("^count - count as high as you can\n")
+            .push("^hair - see how bald you are (also ^bald) \n")
+            .push("^zote - find precepts of zote. ^zote [number] for a specific precept, and ^zote random for a random one.\n")
+            .build();
+        msg.channel_id.say(&ctx.http, &response).await?;
+        return Ok(());
+    } else if args_string == "admin" {
+        if let Some(member) = &msg.member {
+            for role in &member.roles {
+                if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
+                    let response = MessageBuilder::new()
+                        .push_bold_safe("CafeBot moderator\n \n")
+                        .push("^admin_test - test if you are an admin")
+                        .push("^status [string] - change the bot's status (will display as 'Playing [entered status]')")
+                        .push("^slow_mode [seconds] - set the slow mode in that channel to a certain amount of seconds. Set to 0 to turnoff slow mode.")
+                        .build();
+                    msg.channel_id.say(&ctx.http, &response).await?;
+                    return Ok(());
+                }
+            }
+        }
+        msg.channel_id.say(&ctx.http, "You can't access this help page").await?;
+        return Ok(())
+    } else {
+        msg.channel_id.say(&ctx.http, "Please enter either no category for general help or one of these categories: admin.").await?;
+        return Ok(())
+    }
 }
