@@ -5,9 +5,9 @@
 use std::{
     env, 
     fs, fs::{File, OpenOptions}, 
-    io::{prelude::*, BufRead, BufReader}, 
+    io::{BufRead, BufReader}, // prelude::*
     time::{SystemTime, UNIX_EPOCH},
-    collections::{HashMap, HashSet}, fmt::Write, sync::Arc
+    // collections::{HashMap, HashSet}, fmt::Write, sync::Arc
 };
 
 use rand::Rng;
@@ -22,8 +22,8 @@ use serenity::{
             macros::{command, group},
         },
     },
-    http::Http,
-    model::{channel::{Message, Channel}, gateway::{Ready, Activity}, user::OnlineStatus},
+    // http::Http,
+    model::{channel::{Message, Channel}, gateway::{Ready, Activity}, user::OnlineStatus, permissions::Permissions},
     // prelude::*,
     utils::{MessageBuilder, content_safe, ContentSafeOptions},
 };
@@ -32,7 +32,7 @@ struct Handler;
 
 #[group]
 // List of commands 
-#[commands(say, ping, count, hair, help, zote, sarcasm, status, slow_mode)]
+#[commands(say, ping, count, hair, help, zote, sarcasm, status, slow_mode, admin_test)]
 struct General;
 
 // owner's only commands
@@ -80,7 +80,7 @@ async fn main() {
     let token = env::var("DISCORD_TOKEN")
         .expect("Expected a token in the environment");
     // We will fetch your bot's owners and id
-    let http = Http::new_with_token(&token);
+    // let http = Http::new_with_token(&token);
     // let (owners, bot_id) = match http.get_current_application_info().await {
     //     Ok(info) => {
     //         let mut owners = HashSet::new();
@@ -132,7 +132,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         let _file = fs::File::create("log")?; // create log file if it doesn't already exist
     }
     // logging ---- 
-    let mut file = OpenOptions::new()
+    let _file = OpenOptions::new()
         .read(true)
         .write(true)
         .append(true)
@@ -140,7 +140,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .expect("failed to open log file");
     let start = SystemTime::now();
     let unixtime = start.duration_since(UNIX_EPOCH).expect("Time went backwards");
-    let content_to_log = MessageBuilder::new()
+    let _content_to_log = MessageBuilder::new()
         .push("at ")
         .push(unixtime.as_secs())
         .push(": ")
@@ -152,7 +152,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .push("\n")
         .build();
     // file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file"); 
-    // ^ write to log file. somehow this errors even though it didn't recently. any ideas anyone?
+    // ---- FIX THIS. above is to write to log file. somehow this errors even though it didn't recently. any ideas anyone? 
     Ok(())
 }
 #[command]
@@ -309,46 +309,63 @@ fn gen_hairlevel() -> i32 {
 #[command]
 #[only_in(guilds)]
 async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    if msg.author.id == 556940315802599436 {
-        let name = args.message();
-        ctx.set_activity(Activity::playing(&name)).await;
-        let response = MessageBuilder::new()
-            .push("Status has been set to ")
-            .push_bold_safe("Playing")
-            .push(" ")
-            .push_bold_safe(&name)
-            .build();
-        msg.channel_id.say(&ctx.http, &response).await?;
-    } else {
-        msg.channel_id.say(&ctx.http, "Only Owen can run this command. Baldo.").await?;
-    }
+    let name = args.message();
+    ctx.set_activity(Activity::playing(&name)).await;
+    let response = MessageBuilder::new()
+        .push("Status has been set to ")
+        .push_bold_safe("Playing")
+        .push(" ")
+        .push_bold_safe(&name)
+        .build();
+    msg.channel_id.say(&ctx.http, &response).await?;
     Ok(())
 }
 
+// https://github.com/serenity-rs/serenity/blob/dcc1ac4d0a12f24e998af3949e33ec352153a6af/examples/e05_command_framework/src/main.rs#L522
 #[command]
 #[only_in(guilds)]
-// taken from example on serenity github
-// Things I don't understand and want to understand: 
-// What does `format!` marco do? what does `|c|` do? 
-// https://github.com/serenity-rs/serenity/blob/dcc1ac4d0a12f24e998af3949e33ec352153a6af/examples/e05_command_framework/src/main.rs#L540
-#[required_permissions(ADMINISTRATOR)]
-async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let say_content = if let Ok(slow_mode_rate_seconds) = args.single::<u64>() {
-        if let Err(why) = msg.channel_id.edit(&ctx.http, |c| c.slow_mode_rate(slow_mode_rate_seconds)).await {
-            println!("Error setting channel's slow mode rate: {:?}", why);
-
-            format!("Failed to set slow mode to `{}` seconds.", slow_mode_rate_seconds)
-        } else {
-            format!("Successfully set slow mode rate to `{}` seconds.", slow_mode_rate_seconds)
+async fn admin_test(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+    if let Some(member) = &msg.member {
+        for role in &member.roles {
+            if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
+                msg.channel_id.say(&ctx.http, "Yes, you are.").await?;
+                return Ok(());
+            }
         }
-    } else if let Some(Channel::Guild(channel)) = msg.channel_id.to_channel_cached(&ctx.cache).await {
-        format!("Current slow mode rate is `{}` seconds.", channel.slow_mode_rate.unwrap_or(0))
-    } else {
-        println!("cache fail");
-        "Failed to find channel in cache.".to_string()
-    };
-    msg.channel_id.say(&ctx.http, say_content).await?;
-
+    }
+    msg.channel_id.say(&ctx.http, "No, you are not.").await?;
+    Ok(())
+}
+#[command]
+#[only_in(guilds)]
+// Only people with administrator permissions can run
+// #[required_permissions(ADMINISTRATOR)]
+// taken from example on serenity github
+// https://github.com/serenity-rs/serenity/blob/dcc1ac4d0a12f24e998af3949e33ec352153a6af/examples/e05_command_framework/src/main.rs#L540
+async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    if let Some(member) = &msg.member {
+        for role in &member.roles {
+            if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
+                // if you have reached here, you are admin. now do the command.
+                let say_content = if let Ok(slow_mode_rate_seconds) = args.single::<u64>() {
+                    if let Err(why) = msg.channel_id.edit(&ctx.http, |c| c.slow_mode_rate(slow_mode_rate_seconds)).await {
+                        println!("Error setting channel's slow mode rate: {:?}", why);
+                        format!("Failed to set slow mode to `{}` seconds.", slow_mode_rate_seconds)
+                    } else {
+                        format!("Successfully set slow mode rate to `{}` seconds.", slow_mode_rate_seconds)
+                    }
+                } else if let Some(Channel::Guild(channel)) = msg.channel_id.to_channel_cached(&ctx.cache).await {
+                    format!("Current slow mode rate is `{}` seconds.", channel.slow_mode_rate.unwrap_or(0))
+                } else {
+                    println!("cache fail");
+                    "Failed to find channel in cache.".to_string()
+                };
+                msg.channel_id.say(&ctx.http, say_content).await?;
+                return Ok(());
+            }
+        }
+    }
+    msg.channel_id.say(&ctx.http, "You can't run that command.").await?;
     Ok(())
 }
 #[command]
