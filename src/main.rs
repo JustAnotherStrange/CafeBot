@@ -387,7 +387,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         let response = MessageBuilder::new()
             .push_bold_safe("Welcome to CafeBot!\n \n")
             .push("Commands:\n")
-            .push("^help - show help page\n")
+            .push("^help [page] - show help pages. Specify no page for the general help or use one of the following categories: admin\n")
             .push("^ping - pong\n")
             .push("^say - repeat anything that comes after this command\n")
             .push("^count - count as high as you can\n")
@@ -401,7 +401,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             for role in &member.roles {
                 if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
                     let response = MessageBuilder::new()
-                        .push_bold_safe("CafeBot moderator\n \n")
+                        .push_bold_safe("CafeBot admin\n \n")
                         .push("^admin_test - test if you are an admin\n")
                         .push("^status [string] - change the bot's status (will display as 'Playing [entered status]')\n")
                         .push("^slow_mode [seconds] - set the slow mode in that channel to a certain amount of seconds. Set to 0 to turnoff slow mode.\n")
