@@ -1,10 +1,13 @@
 // TODO:
+// instead of hardcoding my user id, use serenity's built in "owner" feature and make a new command
+// group if necessary, where i specify owner ids in the framework declaration
 #![allow(non_snake_case)] // because of CafeBot name of crate
 use std::{
     env, 
     fs, fs::{File, OpenOptions}, 
     io::{prelude::*, BufRead, BufReader}, 
-    time::{SystemTime, UNIX_EPOCH}
+    time::{SystemTime, UNIX_EPOCH},
+    collections::{HashMap, HashSet}, fmt::Write, sync::Arc
 };
 
 use rand::Rng;
@@ -19,7 +22,8 @@ use serenity::{
             macros::{command, group},
         },
     },
-    model::{channel::Message, gateway::{Ready, Activity}, user::OnlineStatus},
+    http::Http,
+    model::{channel::{Message, Channel}, gateway::{Ready, Activity}, user::OnlineStatus},
     // prelude::*,
     utils::{MessageBuilder, content_safe, ContentSafeOptions},
 };
@@ -28,8 +32,17 @@ struct Handler;
 
 #[group]
 // List of commands 
-#[commands(say, ping, count, hair, help, zote, sarcasm, status)]
+#[commands(say, ping, count, hair, help, zote, sarcasm, status, slow_mode)]
 struct General;
+
+// owner's only commands
+// #[group]
+// #[owners_only]
+// #[only_in(guilds)]
+// // Summary only appears when listing multiple groups.
+// #[summary = "Commands for server owners"]
+// #[commands(slow_mode)]
+// struct Owner;
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -66,9 +79,27 @@ async fn main() {
     // Take token from the env var DISCORD_TOKEN
     let token = env::var("DISCORD_TOKEN")
         .expect("Expected a token in the environment");
-        let framework = StandardFramework::new()
+    // We will fetch your bot's owners and id
+    let http = Http::new_with_token(&token);
+    // let (owners, bot_id) = match http.get_current_application_info().await {
+    //     Ok(info) => {
+    //         let mut owners = HashSet::new();
+    //         if let Some(team) = info.team {
+    //             owners.insert(team.owner_user_id);
+    //         } else {
+    //             owners.insert(info.owner.id);
+    //         }
+    //         match http.get_current_user().await {
+    //             Ok(bot_id) => (owners, bot_id.id),
+    //             Err(why) => panic!("Could not access the bot id: {:?}", why),
+    //         }
+    //     },
+    //     Err(why) => panic!("Could not access application info: {:?}", why),
+    // };
+    let framework = StandardFramework::new()
         .configure(|c| c // configure command framework with the prefix "^" and allow whitespaces (e.g. `^ ping")
                    .with_whitespace(true)
+                   // .owners(owners)
                    .prefix("^"))
         .group(&GENERAL_GROUP);
     let mut client = Client::builder(&token)
@@ -101,7 +132,12 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         let _file = fs::File::create("log")?; // create log file if it doesn't already exist
     }
     // logging ---- 
-    let mut file = OpenOptions::new().write(true).append(true).open("log").expect("failed to open log file");
+    let mut file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .append(true)
+        .open("log")
+        .expect("failed to open log file");
     let start = SystemTime::now();
     let unixtime = start.duration_since(UNIX_EPOCH).expect("Time went backwards");
     let content_to_log = MessageBuilder::new()
@@ -115,7 +151,8 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .push(msg.channel_id)
         .push("\n")
         .build();
-    file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file"); // write to log file
+    // file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file"); 
+    // ^ write to log file. somehow this errors even though it didn't recently. any ideas anyone?
     Ok(())
 }
 #[command]
@@ -135,11 +172,7 @@ fn sarcastify(s: &str) -> String {
     let mut cap: bool = true;
     for c in s.chars() {
         // Make it be alternating caps/lowercase
-        if cap {
-            cap = false
-        } else {
-            cap = true
-        }
+        cap = !cap;
         // if it can't be uppercase, just use the same char
         let ch = if cap { c.to_uppercase().nth(0).unwrap_or(c) } else { c.to_lowercase().nth(0).unwrap_or(c) };
         st.push(ch);
@@ -292,6 +325,32 @@ async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     Ok(())
 }
 
+#[command]
+#[only_in(guilds)]
+// taken from example on serenity github
+// Things I don't understand and want to understand: 
+// What does `format!` marco do? what does `|c|` do? 
+// https://github.com/serenity-rs/serenity/blob/dcc1ac4d0a12f24e998af3949e33ec352153a6af/examples/e05_command_framework/src/main.rs#L540
+#[required_permissions(ADMINISTRATOR)]
+async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    let say_content = if let Ok(slow_mode_rate_seconds) = args.single::<u64>() {
+        if let Err(why) = msg.channel_id.edit(&ctx.http, |c| c.slow_mode_rate(slow_mode_rate_seconds)).await {
+            println!("Error setting channel's slow mode rate: {:?}", why);
+
+            format!("Failed to set slow mode to `{}` seconds.", slow_mode_rate_seconds)
+        } else {
+            format!("Successfully set slow mode rate to `{}` seconds.", slow_mode_rate_seconds)
+        }
+    } else if let Some(Channel::Guild(channel)) = msg.channel_id.to_channel_cached(&ctx.cache).await {
+        format!("Current slow mode rate is `{}` seconds.", channel.slow_mode_rate.unwrap_or(0))
+    } else {
+        println!("cache fail");
+        "Failed to find channel in cache.".to_string()
+    };
+    msg.channel_id.say(&ctx.http, say_content).await?;
+
+    Ok(())
+}
 #[command]
 #[only_in(guilds)]
 // Simple help command. 
