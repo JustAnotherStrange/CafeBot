@@ -25,7 +25,7 @@ use serenity::{
 struct Handler;
 
 #[group]
-#[commands(say, ping, count, hair, help, zote)]
+#[commands(say, ping, count, hair, help, zote, sarcasm)]
 struct General;
 
 #[async_trait]
@@ -115,6 +115,30 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     msg.delete(&ctx.http).await?;
     Ok(())
 }
+#[command]
+#[only_in(guilds)]
+async fn sarcasm(ctx: &Context, msg: &Message, a: Args) -> CommandResult {
+    let mut sarcasted = sarcastify(&a.rest());
+    sarcasted.insert_str(0, "@: ");
+    sarcasted.insert_str(1, &msg.author.name);
+    msg.channel_id.say(&ctx.http, &sarcasted).await?;
+    msg.delete(&ctx.http).await?;
+    Ok(())
+}
+fn gen_random_bool() -> bool {
+    let mut rng = rand::thread_rng();
+    rng.gen::<bool>()
+}
+
+fn sarcastify(s: &str) -> String {
+    let mut st = String::new();
+    for c in s.chars() {
+        // if it cant be uppercase, just use the same char
+        let ch = if gen_random_bool() { c.to_uppercase().nth(0).unwrap_or(c) } else { c.to_lowercase().nth(0).unwrap_or(c) };
+        st.push(ch);
+    }
+    st
+}
 
 #[command]
 #[only_in(guilds)]
@@ -191,7 +215,7 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 }
 fn gen_random_zote() -> usize {
     let mut rng = rand::thread_rng();
-    return rng.gen_range(0..58);
+    rng.gen_range(0..58)
 }
 
 #[command]
@@ -223,7 +247,7 @@ async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 
 fn gen_hairlevel() -> i32 {
     let mut rng = rand::thread_rng();
-    return rng.gen_range(0..101);
+    rng.gen_range(0..101)
 }
 
 #[command]
