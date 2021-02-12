@@ -1,12 +1,13 @@
 // TODO:
-// make discord status "serving coffee" or something similar.
-#![allow(non_snake_case)]
-use std::env;
-use std::fs;
-use std::fs::{File, OpenOptions};
-use std::io::{prelude::*, BufRead, BufReader};
+#![allow(non_snake_case)] // because of CafeBot name of crate
+use std::{
+    env, 
+    fs, fs::{File, OpenOptions}, 
+    io::{prelude::*, BufRead, BufReader}, 
+    time::{SystemTime, UNIX_EPOCH}
+};
+
 use rand::Rng;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use serenity::{
     async_trait,
@@ -22,9 +23,11 @@ use serenity::{
     // prelude::*,
     utils::{MessageBuilder, content_safe, ContentSafeOptions},
 };
+
 struct Handler;
 
 #[group]
+// List of commands 
 #[commands(say, ping, count, hair, help, zote, sarcasm, status)]
 struct General;
 
@@ -55,7 +58,6 @@ impl EventHandler for Handler {
             }
         }
         // ----- end subreddit detecting -----
-        
     }
 }
 
@@ -98,16 +100,10 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     if !(std::path::Path::new("log").exists()) {
         let _file = fs::File::create("log")?; // create log file if it doesn't already exist
     }
-    // logging
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open("log")
-        .expect("failed to open log file");
+    // logging ---- 
+    let mut file = OpenOptions::new().write(true).append(true).open("log").expect("failed to open log file");
     let start = SystemTime::now();
-    let unixtime = start
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
+    let unixtime = start.duration_since(UNIX_EPOCH).expect("Time went backwards");
     let content_to_log = MessageBuilder::new()
         .push("at ")
         .push(unixtime.as_secs())
