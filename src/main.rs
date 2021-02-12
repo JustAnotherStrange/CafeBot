@@ -138,7 +138,7 @@ async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 
 fn sarcastify(s: &str) -> String {
     let mut st = String::new();
-    let mut cap: bool = false;
+    let mut cap: bool = true;
     for c in s.chars() {
         // Make it be alternating caps/not
         if cap {
