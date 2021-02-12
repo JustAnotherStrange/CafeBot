@@ -127,24 +127,27 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 }
 #[command]
 #[only_in(guilds)]
-async fn sarcasm(ctx: &Context, msg: &Message, a: Args) -> CommandResult {
-    let mut sarcasted = sarcastify(&a.rest());
+async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let mut sarcasted = sarcastify(&args.rest());
     sarcasted.insert_str(0, "@: ");
     sarcasted.insert_str(1, &msg.author.name);
     msg.channel_id.say(&ctx.http, &sarcasted).await?;
     msg.delete(&ctx.http).await?;
     Ok(())
 }
-fn gen_random_bool() -> bool {
-    let mut rng = rand::thread_rng();
-    rng.gen::<bool>()
-}
 
 fn sarcastify(s: &str) -> String {
     let mut st = String::new();
+    let mut cap: bool = false;
     for c in s.chars() {
+        // Make it be alternating caps/not
+        if cap {
+            cap = false
+        } else {
+            cap = true
+        }
         // if it cant be uppercase, just use the same char
-        let ch = if gen_random_bool() { c.to_uppercase().nth(0).unwrap_or(c) } else { c.to_lowercase().nth(0).unwrap_or(c) };
+        let ch = if cap { c.to_uppercase().nth(0).unwrap_or(c) } else { c.to_lowercase().nth(0).unwrap_or(c) };
         st.push(ch);
     }
     st
