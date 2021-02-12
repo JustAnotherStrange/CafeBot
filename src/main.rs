@@ -402,9 +402,9 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
                     let response = MessageBuilder::new()
                         .push_bold_safe("CafeBot moderator\n \n")
-                        .push("^admin_test - test if you are an admin")
-                        .push("^status [string] - change the bot's status (will display as 'Playing [entered status]')")
-                        .push("^slow_mode [seconds] - set the slow mode in that channel to a certain amount of seconds. Set to 0 to turnoff slow mode.")
+                        .push("^admin_test - test if you are an admin\n")
+                        .push("^status [string] - change the bot's status (will display as 'Playing [entered status]')\n")
+                        .push("^slow_mode [seconds] - set the slow mode in that channel to a certain amount of seconds. Set to 0 to turnoff slow mode.\n")
                         .build();
                     msg.channel_id.say(&ctx.http, &response).await?;
                     return Ok(());
