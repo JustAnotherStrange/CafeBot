@@ -309,15 +309,23 @@ fn gen_hairlevel() -> i32 {
 #[command]
 #[only_in(guilds)]
 async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    let name = args.message();
-    ctx.set_activity(Activity::playing(&name)).await;
-    let response = MessageBuilder::new()
-        .push("Status has been set to ")
-        .push_bold_safe("Playing")
-        .push(" ")
-        .push_bold_safe(&name)
-        .build();
-    msg.channel_id.say(&ctx.http, &response).await?;
+    if let Some(member) = &msg.member {
+        for role in &member.roles {
+            if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
+                let name = args.message();
+                ctx.set_activity(Activity::playing(&name)).await;
+                let response = MessageBuilder::new()
+                    .push("Status has been set to ")
+                    .push_bold_safe("Playing")
+                    .push(" ")
+                    .push_bold_safe(&name)
+                    .build();
+                msg.channel_id.say(&ctx.http, &response).await?;
+                return Ok(());
+            }
+        }
+    }
+    msg.channel_id.say(&ctx.http, "You can't run that command.").await?;
     Ok(())
 }
 
