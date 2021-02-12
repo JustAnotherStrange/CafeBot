@@ -124,8 +124,9 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .clean_role(false)
     };
     let content = content_safe(&ctx.cache, &args.rest(), &settings).await; // this content safety returns @invalid-user for every user ping weirdly
-    msg.delete(&ctx.http).await?;
-    msg.channel_id.say(&ctx.http, &content).await?; 
+    let d = msg.delete(&ctx.http);
+    let m = msg.channel_id.say(&ctx.http, &content);
+    tokio::try_join!(d,m)?;
     if !(std::path::Path::new("log").exists()) {
         fs::File::create("log")?; // create log file if it doesn't already exist
     }
