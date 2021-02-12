@@ -6,6 +6,7 @@ if [ $? != 0 ]; then
 fi
 # auto restart
 while true;
-    do ./target/release/CafeBot
+	do date
+    	./target/release/CafeBot
 done
 
