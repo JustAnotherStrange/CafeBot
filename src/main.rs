@@ -1,15 +1,11 @@
 // TODO:
-// add more logging
 #![allow(non_snake_case)]
 use std::env;
 use std::fs;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::{BufRead, BufReader};
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
+use std::io::{prelude::*, BufRead, BufReader};
 use rand::Rng;
 use std::time::{SystemTime, UNIX_EPOCH};
-
 
 use serenity::{
     async_trait,
@@ -33,11 +29,11 @@ struct General;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
+    async fn ready(&self, _: Context, ready: Ready) { // inform when connected
+        println!("Connected as {}", ready.user.name);
     }
     async fn message(&self, ctx: Context, msg: Message) {
-        // ----- subreddit detecting and linking ----- 
+        // ----- subreddit detecting and linking by g_w1 ----- 
         let mut sub_reddit = String::new();
         if !(msg.content.to_lowercase().contains("://reddit.com")) {
             if let Some(l) = &msg.content.find("r/") {
@@ -62,11 +58,11 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    // Configure the client with your Discord bot token in the environment.
+    // Take token from the env var DISCORD_TOKEN
     let token = env::var("DISCORD_TOKEN")
         .expect("Expected a token in the environment");
-    let framework = StandardFramework::new()
-        .configure(|c| c
+        let framework = StandardFramework::new()
+        .configure(|c| c // configure command framework with the prefix "^" and allow whitespaces (e.g. `^ ping")
                    .with_whitespace(true)
                    .prefix("^"))
         .group(&GENERAL_GROUP);
@@ -82,6 +78,7 @@ async fn main() {
 }
 #[command]
 #[only_in(guilds)]
+// Say command: repeat back what the user types, and then delete the user's original message
 async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let settings = if let Some(guild_id) = msg.guild_id {
         ContentSafeOptions::default()
@@ -92,16 +89,13 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .clean_channel(false)
             .clean_role(false)
     };
-    let content = content_safe(&ctx.cache, &args.rest(), &settings).await;
-    if content == "bruh" {
-        msg.channel_id.say(&ctx.http, "you have unlocked the secret response").await?;
-    } else {
-        msg.channel_id.say(&ctx.http, &content).await?;
-    }
+    let content = content_safe(&ctx.cache, &args.rest(), &settings).await; // this content safety returns @invalid-user for every user ping weirdly
+    msg.channel_id.say(&ctx.http, &content).await?; 
     msg.delete(&ctx.http).await?;
     if !(std::path::Path::new("log").exists()) {
-        let _file = fs::File::create("log")?;
+        let _file = fs::File::create("log")?; // create log file if it doesn't already exist
     }
+    // logging
     let mut file = OpenOptions::new()
         .write(true)
         .append(true)
@@ -119,14 +113,15 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .push(" written by ")
         .push(&msg.author.name)
         .push(" using the say command in the channel ")
-        .push(msg.channel_id) // time
+        .push(msg.channel_id)
         .push("\n")
         .build();
-    file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file");
+    file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file"); // write to log file
     Ok(())
 }
 #[command]
 #[only_in(guilds)]
+// sarcasm command for tExT lIkE tHiS. By g_w1 
 async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let mut sarcasted = sarcastify(&args.rest());
     sarcasted.insert_str(0, "@: ");
@@ -140,13 +135,13 @@ fn sarcastify(s: &str) -> String {
     let mut st = String::new();
     let mut cap: bool = true;
     for c in s.chars() {
-        // Make it be alternating caps/not
+        // Make it be alternating caps/lowercase
         if cap {
             cap = false
         } else {
             cap = true
         }
-        // if it cant be uppercase, just use the same char
+        // if it can't be uppercase, just use the same char
         let ch = if cap { c.to_uppercase().nth(0).unwrap_or(c) } else { c.to_lowercase().nth(0).unwrap_or(c) };
         st.push(ch);
     }
@@ -155,6 +150,7 @@ fn sarcastify(s: &str) -> String {
 
 #[command]
 #[only_in(guilds)]
+// ping pong command
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     msg.channel_id.say(&ctx.http, "pong").await?;
     Ok(())
@@ -162,47 +158,54 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 #[only_in(guilds)]
+// count command for increasing a counter every time it's ran.
+// uses a "./count" file in the crate's root directory.
 async fn count(ctx: &Context, msg: &Message) -> CommandResult {
-    // check if file doesn't exist and then create it if it doesn't
     if !(std::path::Path::new("count").exists()) {
-        let _file = fs::File::create("count")?;
+        let _file = fs::File::create("count")?; // create the count file if it doesn't already exist
     }
     let mut file = fs::read_to_string("./count").expect("Unable to read file.");
+    // write "0" to file if the file is empty
     if file == "" {
         let to_write_final = String::new() + "0" + "\n";
         fs::write("./count", to_write_final).expect("Failed to write to file");
     }
+    // convert the string from reading the file into an i32 for performing math on it
     let len = file.len();
     file.truncate(len - 1);
     let file_int: i32 = file.parse().expect("Failed to parse file string into integer");
     let to_write = file_int + 1;
     let to_write_string = to_write.to_string();
     let to_write_final = String::new() + to_write_string.as_str() + "\n";
-    fs::write("./count", to_write_final).expect("Failed to write to file");
+    fs::write("./count", to_write_final).expect("Failed to write to file"); // write the new number to the file
     msg.channel_id.say(&ctx.http, &to_write).await?;
     Ok(())
 }
 
 #[command]
 #[only_in(guilds)]
+// zote command for the precepts of zote from hollow knight.
+// Uses a file in the crate's root directory "./zote" should have been pulled as apart of git clone.
 async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let args_string = args.rest();
-    // let zote_test: i32 = args_string.parse() {
-    let zote_line: usize;
+    let zote_line: usize; // usize because it's an indicator for what line to read from in the file
     if args_string == "random" {
         zote_line = gen_random_zote();
     } else if args_string == "all" {
-        zote_line = 101;
+        zote_line = 101; // 101 is an indicator to print all 57. probably a better way to do this, idk.
     } else {
-        zote_line = args_string.parse().unwrap_or(100);
+        // if the argument can't be parsed into usize, then set the line num to 100,
+        // which will trigger the "please enter a number" message.
+        zote_line = args_string.parse().unwrap_or(100); 
     }
     if zote_line == 101 {
-        // print all
+        // print all precepts
         let filename = "zote";
         let file = File::open(filename).expect("failed to open file");
         let reader = BufReader::new(file);
         for (_index, line) in reader.lines().enumerate() {
             let line = line.unwrap();
+            // Say the line along with a zote emoji from CyberCafe.
             let response = MessageBuilder::new()
                 .push("<:zote:809592148805681193> ")
                 .push(&line)
@@ -210,16 +213,16 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             msg.channel_id.say(&ctx.http, &response).await?;
         }
     } else if zote_line > 57 {
-        msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?;
+        msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?; // because there are only 57 precepts
     } else {
         // take that line of the zote file and print it.
         let filename = "zote";
         let file = File::open(filename).expect("failed to open file");
         let reader = BufReader::new(file);
         for (index, line) in reader.lines().enumerate() {
-            let line = line.unwrap(); // Ignore errors.
-            // Show the line and its number.
+            let line = line.unwrap(); 
             if index + 1 == zote_line {
+                // Say the line along with a zote emoji from CyberCafe.
                 let response = MessageBuilder::new()
                     .push("<:zote:809592148805681193> ")
                     .push(&line)
@@ -231,7 +234,7 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     };
     Ok(())
 }
-fn gen_random_zote() -> usize {
+fn gen_random_zote() -> usize { // again, usize because it's an indicator for a line number
     let mut rng = rand::thread_rng();
     rng.gen_range(0..58)
 }
@@ -239,21 +242,25 @@ fn gen_random_zote() -> usize {
 #[command]
 #[only_in(guilds)]
 #[aliases("bald")]
+// baldness calculator (actually just a random number generator).
+// You can also specify who to test (e.g. ^bald @joe)
 async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    // let settings = ContentSafeOptions::default();
     let hairlevel = gen_hairlevel();
-    let content = args.rest();
-    if content == "" {
+    let args_string = args.rest();
+    if args_string == "" { // if there is no argument
+        // build a message where it says something like:
+        // "@joe has 23% hair."
         let response = MessageBuilder::new()
-            .push_bold_safe(&msg.author.name)
+            .push_bold_safe(&msg.author.name) // since there is no argument, just use the name of the author of the message for who is to be tested.
             .push(" has ")
             .push_bold_safe(&hairlevel)
             .push("% hair.")
             .build();
         msg.channel_id.say(&ctx.http, &response).await?;
     } else {
+        // similarly build a message.
         let response = MessageBuilder::new()
-            .push_bold_safe(&content)
+            .push_bold_safe(&args_string) // use the arguments for the person to be tested
             .push(" has ")
             .push_bold_safe(&hairlevel)
             .push("% hair.")
@@ -270,7 +277,10 @@ fn gen_hairlevel() -> i32 {
 
 #[command]
 #[only_in(guilds)]
+// Simple help command. 
+// I tried to make it use embeds but it was a hassle and didn't work after a lot of debugging.
 async fn help(ctx: &Context, msg: &Message) -> CommandResult {
+    // build the message
     let response = MessageBuilder::new()
         .push_bold_safe("Welcome to CafeBot!\n \n")
         .push("Commands:\n")
