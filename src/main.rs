@@ -355,8 +355,9 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                     msg.channel_id.say(&ctx.http, &response).await?;
                 }
             }
+        } else {
+            msg.channel_id.say(&ctx.http, "You can't access this help page").await?;
         }
-        msg.channel_id.say(&ctx.http, "You can't access this help page").await?;
     } else {
         msg.channel_id.say(&ctx.http, "Please enter either no category for general help or one of these categories: admin.").await?;
     }
