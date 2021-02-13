@@ -33,15 +33,6 @@ struct Handler;
 #[commands(say, ping, count, hair, help, zote, sarcasm, status, slow_mode, admin_test)]
 struct General;
 
-// owner's only commands
-// #[group]
-// #[owners_only]
-// #[only_in(guilds)]
-// // Summary only appears when listing multiple groups.
-// #[summary = "Commands for server owners"]
-// #[commands(slow_mode)]
-// struct Owner;
-
 #[async_trait]
 impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) { // inform when connected
@@ -77,27 +68,9 @@ async fn main() {
     // Take token from the env var DISCORD_TOKEN
     let token = env::var("DISCORD_TOKEN")
         .expect("Expected a token in the environment");
-    // We will fetch your bot's owners and id
-    // let http = Http::new_with_token(&token);
-    // let (owners, bot_id) = match http.get_current_application_info().await {
-    //     Ok(info) => {
-    //         let mut owners = HashSet::new();
-    //         if let Some(team) = info.team {
-    //             owners.insert(team.owner_user_id);
-    //         } else {
-    //             owners.insert(info.owner.id);
-    //         }
-    //         match http.get_current_user().await {
-    //             Ok(bot_id) => (owners, bot_id.id),
-    //             Err(why) => panic!("Could not access the bot id: {:?}", why),
-    //         }
-    //     },
-    //     Err(why) => panic!("Could not access application info: {:?}", why),
-    // };
     let framework = StandardFramework::new()
         .configure(|c| c // configure command framework with the prefix "^" and allow whitespaces (e.g. `^ ping")
                    .with_whitespace(true)
-                   // .owners(owners)
                    .prefix("^"))
         .group(&GENERAL_GROUP);
     let mut client = Client::builder(&token)
@@ -126,7 +99,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let content = content_safe(&ctx.cache, &args.rest(), &settings).await; // this content safety returns @invalid-user for every user ping weirdly
     let d = msg.delete(&ctx.http);
     let m = msg.channel_id.say(&ctx.http, &content);
-    tokio::try_join!(d,m)?;
+    tokio::try_join!(d,m)?; // do both at the same time and continue once both return Ok(). It'll quit if one returns any Err()
     if !(std::path::Path::new("log").exists()) {
         fs::File::create("log")?; // create log file if it doesn't already exist
     }
@@ -160,8 +133,9 @@ async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let mut sarcasted = sarcastify(&args.rest());
     sarcasted.insert_str(0, "@: ");
     sarcasted.insert_str(1, &msg.author.name);
-    msg.channel_id.say(&ctx.http, &sarcasted).await?;
-    msg.delete(&ctx.http).await?;
+    let d = msg.delete(&ctx.http);
+    let m = msg.channel_id.say(&ctx.http, &sarcasted);
+    tokio::try_join!(d,m)?; // do both at the same time and continue once both return Ok(). It'll quit if one returns any Err()
     Ok(())
 }
 
@@ -310,12 +284,12 @@ async fn admin_test(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
     if let Some(member) = &msg.member {
         for role in &member.roles {
             if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
-                msg.channel_id.say(&ctx.http, "Yes, you are.").await?;
+                msg.channel_id.say(&ctx.http, "You are an admin.").await?;
                 return Ok(());
             }
         }
     }
-    msg.channel_id.say(&ctx.http, "No, you are not.").await?;
+    msg.channel_id.say(&ctx.http, "You are not an admin.").await?;
     Ok(())
 }
 #[command]
@@ -347,6 +321,7 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
     msg.channel_id.say(&ctx.http, "You can't run that command.").await?;
     Ok(())
 }
+
 #[command]
 #[only_in(guilds)]
 // Simple help command. 
@@ -364,10 +339,10 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .push("^count - count as high as you can\n")
             .push("^hair - see how bald you are (also ^bald) \n")
             .push("^zote - find precepts of zote. ^zote [number] for a specific precept, and ^zote random for a random one.\n")
-            .push("^help admin - admin help\n")
             .build();
         msg.channel_id.say(&ctx.http, &response).await?;
     } else if args_string == "admin" {
+        // only let admins ask for admin help
         if let Some(member) = &msg.member {
             for role in &member.roles {
                 if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
