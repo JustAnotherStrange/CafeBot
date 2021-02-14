@@ -44,18 +44,20 @@ impl EventHandler for Handler {
         // ----- subreddit detecting and linking by g_w1 ----- 
         if !(msg.content.to_lowercase().contains("://reddit.com")) {
             if let Some(l) = &msg.content.find("r/") {
-                let mut sub_reddit = String::new();
-                for (i,c) in msg.content.chars().into_iter().enumerate() {
-                    if i < *l + 2 { // + 2 because of r/
-                        continue;
+                if *l == 0 || msg.content.chars().collect::<Vec<char>>()[l - 1].is_whitespace() {
+                    let mut sub_reddit = String::new();
+                    for (i,c) in msg.content.chars().into_iter().enumerate() {
+                        if i < *l + 2 { // + 2 because of r/
+                            continue;
+                        }
+                        if c == ' ' {
+                            break;
+                        }
+                        sub_reddit.push(c);
                     }
-                    if c == ' ' {
-                        break;
+                    if let Err(oof) = msg.channel_id.say(&ctx.http, format!("<https://reddit.com/r/{}>", sub_reddit)).await {
+                        println!("oofed: {}", oof);
                     }
-                    sub_reddit.push(c);
-                }
-                if let Err(oof) = msg.channel_id.say(&ctx.http, format!("<https://reddit.com/r/{}>", sub_reddit)).await {
-                    println!("oofed: {}", oof);
                 }
             }
         }
