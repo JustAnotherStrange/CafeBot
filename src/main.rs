@@ -6,13 +6,14 @@ use std::{
     io::{BufRead, BufReader, prelude::*},
     time::{SystemTime, UNIX_EPOCH},
     // collections::{HashMap, HashSet}, fmt::Write, sync::Arc
+    sync::Arc
 };
 
 use rand::{thread_rng, Rng};
 
 use serenity::{
     async_trait,
-    client::{Client, Context, EventHandler},
+    client::{Client, Context, EventHandler, bridge::gateway::{ShardId, ShardManager}},
     framework::{
         StandardFramework,
         standard::{
@@ -22,15 +23,25 @@ use serenity::{
     },
     // http::Http,
     model::{channel::{Message, Channel}, gateway::{Ready, Activity}, user::OnlineStatus, permissions::Permissions},
-    // prelude::*,
+    prelude::*,
     utils::{MessageBuilder, content_safe, ContentSafeOptions},
 };
+
+// https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
+// A container type is created for inserting into the Client's `data`, which
+// allows for data to be accessible across all events and framework commands, or
+// anywhere else that has a copy of the `data` Arc.
+struct ShardManagerContainer;
+
+impl TypeMapKey for ShardManagerContainer {
+    type Value = Arc<Mutex<ShardManager>>;
+}
 
 struct Handler;
 
 #[group]
 // List of commands 
-#[commands(say, ping, count, hair, help, zote, sarcasm, status, slow_mode, admin_test)]
+#[commands(say, ping, count, hair, help, zote, sarcasm, latency, status, slow_mode, admin_test)]
 struct General;
 
 #[async_trait]
@@ -55,7 +66,7 @@ impl EventHandler for Handler {
                         }
                         sub_reddit.push(c);
                     }
-                    if let Err(oof) = msg.channel_id.say(&ctx.http, format!("<https://reddit.com/r/{}>", sub_reddit)).await {
+                    if let Err(oof) = msg.reply(&ctx.http, format!("<https://reddit.com/r/{}>", sub_reddit)).await {
                         println!("oofed: {}", oof);
                     }
                 }
@@ -162,7 +173,7 @@ fn sarcastify(s: &str) -> String {
 #[only_in(guilds)]
 // ping pong command
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.channel_id.say(&ctx.http, "pong").await?;
+    msg.reply(&ctx.http, "pong").await?;
     Ok(())
 }
 
@@ -188,7 +199,7 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
     let to_write_string = to_write.to_string();
     let to_write_final = String::new() + to_write_string.as_str() + "\n";
     fs::write("./count", to_write_final).expect("Failed to write to file"); // write the new number to the file
-    msg.channel_id.say(&ctx.http, &to_write).await?;
+    msg.reply(&ctx.http, &to_write).await?;
     Ok(())
 }
 
@@ -217,10 +228,10 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .push("<:zote:809592148805681193> ")
                 .push(&line)
                 .build();
-            msg.channel_id.say(&ctx.http, &response).await?;
+            msg.reply(&ctx.http, &response).await?;
         }
     } else if zote_line > 57 {
-        msg.channel_id.say(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?; // because there are only 57 precepts
+        msg.reply(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?; // because there are only 57 precepts
     } else {
         // take that line of the zote file and print it.
         let filename = "zote";
@@ -234,7 +245,7 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                     .push("<:zote:809592148805681193> ")
                     .push(&line)
                     .build();
-                msg.channel_id.say(&ctx.http, &response).await?;
+                msg.reply(&ctx.http, &response).await?;
                 break;
             }
         }
@@ -256,7 +267,43 @@ async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .push_bold_safe(&hairlevel)
         .push("% hair.")
         .build();
-    msg.channel_id.say(&ctx.http, &response).await?;
+    msg.reply(&ctx.http, &response).await?;
+    Ok(())
+}
+#[command]
+#[only_in(guilds)]
+// from https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L437
+async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
+    // The shard manager is an interface for mutating, stopping, restarting, and
+    // retrieving information about shards.
+    let data = ctx.data.read().await;
+
+    let shard_manager = match data.get::<ShardManagerContainer>() {
+        Some(v) => v,
+        None => {
+            msg.reply(ctx, "There was a problem getting the shard manager").await?;
+
+            return Ok(());
+        },
+    };
+
+    let manager = shard_manager.lock().await;
+    let runners = manager.runners.lock().await;
+
+    // Shards are backed by a "shard runner" responsible for processing events
+    // over the shard, so we'll get the information about the shard runner for
+    // the shard this command was sent over.
+    let runner = match runners.get(&ShardId(ctx.shard_id)) {
+        Some(runner) => runner,
+        None => {
+            msg.reply(ctx,  "No shard found").await?;
+
+            return Ok(());
+        },
+    };
+
+    msg.reply(ctx, &format!("The shard latency is {:?}", runner.latency)).await?;
+
     Ok(())
 }
 
@@ -274,12 +321,12 @@ async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                     .push(" ")
                     .push_bold_safe(&name)
                     .build();
-                msg.channel_id.say(&ctx.http, &response).await?;
+                msg.reply(&ctx.http, &response).await?;
                 return Ok(());
             }
         }
     }
-    msg.channel_id.say(&ctx.http, "You can't run that command.").await?;
+    msg.reply(&ctx.http, "You can't run that command.").await?;
     Ok(())
 }
 
@@ -290,12 +337,12 @@ async fn admin_test(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
     if let Some(member) = &msg.member {
         for role in &member.roles {
             if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
-                msg.channel_id.say(&ctx.http, "You are an admin.").await?;
+                msg.reply(&ctx.http, "You are an admin.").await?;
                 return Ok(());
             }
         }
     }
-    msg.channel_id.say(&ctx.http, "You are not an admin.").await?;
+    msg.reply(&ctx.http, "You are not an admin.").await?;
     Ok(())
 }
 #[command]
@@ -320,11 +367,11 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
                 } else {
                     "Failed to find channel in cache.".to_string()
                 };
-                msg.channel_id.say(&ctx.http, say_content).await?;
+                msg.reply(&ctx.http, say_content).await?;
             }
         }
     }
-    msg.channel_id.say(&ctx.http, "You can't run that command.").await?;
+    msg.reply(&ctx.http, "You can't run that command.").await?;
     Ok(())
 }
 
@@ -346,7 +393,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .push("^hair - see how bald you are (also ^bald) \n")
             .push("^zote - find precepts of zote. ^zote [number] for a specific precept, and ^zote random for a random one.\n")
             .build();
-        msg.channel_id.say(&ctx.http, &response).await?;
+        msg.reply(&ctx.http, &response).await?;
     } else if args_string == "admin" {
         // only let admins ask for admin help
         if let Some(member) = &msg.member {
@@ -358,14 +405,14 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                         .push("^status [string] - change the bot's status (will display as 'Playing [entered status]')\n")
                         .push("^slow_mode [seconds] - set the slow mode in that channel to a certain amount of seconds. Set to 0 to turnoff slow mode.\n")
                         .build();
-                    msg.channel_id.say(&ctx.http, &response).await?;
+                    msg.reply(&ctx.http, &response).await?;
                 }
             }
         } else {
-            msg.channel_id.say(&ctx.http, "You can't access this help page").await?;
+            msg.reply(&ctx.http, "You can't access this help page").await?;
         }
     } else {
-        msg.channel_id.say(&ctx.http, "Please enter either no category for general help or one of these categories: admin.").await?;
+        msg.reply(&ctx.http, "Please enter either no category for general help or one of these categories: admin.").await?;
     }
     Ok(())
 }
