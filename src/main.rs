@@ -228,10 +228,12 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .push("<:zote:809592148805681193> ")
                 .push(&line)
                 .build();
-            msg.reply(&ctx.http, &response).await?;
+            msg.channel_id.say(&ctx.http, &response).await?;
         }
+    } else if args_string == "bald" {
+        msg.reply(&ctx.http, "<:zote:809592148805681193> Precept Bald: 'Never Be Bald'. A head without hair will make you weaker in battle. You must avoid this at all costs by growing hair.").await?;
     } else if zote_line > 57 {
-        msg.reply(&ctx.http, "Please select a number less than or equal to 57 and greater than 0").await?; // because there are only 57 precepts
+        msg.reply(&ctx.http, "Please select a number from 1 to 57, or 'random', 'all', or 'bald'.").await?; // because there are only 57 precepts
     } else {
         // take that line of the zote file and print it.
         let filename = "zote";
@@ -391,7 +393,8 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .push("^say - repeat anything that comes after this command\n")
             .push("^count - count as high as you can\n")
             .push("^hair - see how bald you are (also ^bald) \n")
-            .push("^zote - find precepts of zote. ^zote [number] for a specific precept, and ^zote random for a random one.\n")
+            .push("^zote - find precepts of zote. ^zote [number] for a specific precept, ^zote random for a random one, and ^zote bald for our own precept.\n")
+            .push("^latency - see latency to bot host. currently broken.\n")
             .build();
         msg.reply(&ctx.http, &response).await?;
     } else if args_string == "admin" {
