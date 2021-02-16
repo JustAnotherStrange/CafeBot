@@ -41,7 +41,7 @@ struct Handler;
 
 #[group]
 // List of commands 
-#[commands(say, ping, count, hair, help, zote, sarcasm, latency, status, slow_mode, admin_test)]
+#[commands(say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test)]
 struct General;
 
 #[async_trait]
@@ -272,6 +272,20 @@ async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     msg.reply(&ctx.http, &response).await?;
     Ok(())
 }
+
+#[command]
+#[only_in(guilds)]
+async fn bruh(ctx: &Context, msg: &Message) -> CommandResult {
+    let choice = thread_rng().gen_range(1..5);
+    match choice {
+        1 => msg.reply(&ctx.http, "<:CyberBruh:702876356287135864>"),
+        2 => msg.reply(&ctx.http, "<:burh:721124449252016158>"),
+        3 => msg.reply(&ctx.http, "<:certifiedbruhmoment:704060742034522213>"),
+        4 => msg.reply(&ctx.http, "<:bruh100:679483886241185823>"),
+        _ => msg.reply(&ctx.http, "random number generation range broke."),
+    }.await?;
+    Ok(())
+}
 #[command]
 #[only_in(guilds)]
 // from https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L437
@@ -394,6 +408,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .push("^count - count as high as you can\n")
             .push("^hair - see how bald you are (also ^bald) \n")
             .push("^zote - find precepts of zote. ^zote [number] for a specific precept, ^zote random for a random one, and ^zote bald for our own precept.\n")
+            .push("^bruh - get a random bruh emote")
             .push("^latency - see latency to bot host. currently broken.\n")
             .build();
         msg.reply(&ctx.http, &response).await?;
