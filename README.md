@@ -1,4 +1,4 @@
 # CafeBot
-A simple discord bot with a couple of nice features for the purpose of learning the serenity rust discord api crate.
+A Discord bot for my small server that I won't invite you to.
 
-Prefix is \^. See list of commands with \^help.
+Written in Rust and uses https://github.com/serenity-rs/serenity for interaction with the Discord API. Prefix is \^. 
