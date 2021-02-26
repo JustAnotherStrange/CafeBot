@@ -147,6 +147,7 @@ async fn delete_and_send(ctx: &Context, msg: &Message, to_send: &str) -> Command
 }
 #[command]
 #[only_in(guilds)]
+#[aliases("s")]
 // sarcasm command for tExT lIkE tHiS. By g_w1 
 async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let mut sarcasted = sarcastify(&args.rest());
