@@ -340,6 +340,7 @@ async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                     .build();
                 msg.reply(&ctx.http, &response).await?;
                 return Ok(());
+                break;
             }
         }
     }
@@ -427,6 +428,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                             .push("^slow_mode [seconds] - set the slow mode in that channel to a certain amount of seconds. Set to 0 to turnoff slow mode.\n")
                             .build();
                         msg.reply(&ctx.http, &response).await?;
+                        break;
                     }
                 }
             } else {
