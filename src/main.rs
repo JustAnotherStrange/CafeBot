@@ -399,39 +399,41 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
 async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // build the message
     let args_string = args.rest();
-    if args_string == "" {
-        let response = MessageBuilder::new()
-            .push_bold_safe("Welcome to CafeBot!\n \n")
-            .push("Commands:\n")
-            .push("^help [page] - show help pages. Specify no page for the general help or use one of the following categories: admin\n")
-            .push("^ping - pong\n")
-            .push("^say - repeat anything that comes after this command\n")
-            .push("^count - count as high as you can\n")
-            .push("^hair - see how bald you are (also ^bald) \n")
-            .push("^zote - find precepts of zote. ^zote [number] for a specific precept, ^zote random for a random one, and ^zote bald for our own precept.\n")
-            .push("^bruh - get a random bruh emote")
-            .push("^latency - see latency to bot host. currently broken.\n")
-            .build();
-        msg.reply(&ctx.http, &response).await?;
-    } else if args_string == "admin" {
-        // only let admins ask for admin help
-        if let Some(member) = &msg.member {
-            for role in &member.roles {
-                if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
-                    let response = MessageBuilder::new()
-                        .push_bold_safe("CafeBot admin\n \n")
-                        .push("^admin_test - test if you are an admin\n")
-                        .push("^status [string] - change the bot's status (will display as 'Playing [entered status]')\n")
-                        .push("^slow_mode [seconds] - set the slow mode in that channel to a certain amount of seconds. Set to 0 to turnoff slow mode.\n")
-                        .build();
-                    msg.reply(&ctx.http, &response).await?;
-                }
-            }
-        } else {
-            msg.reply(&ctx.http, "You can't access this help page").await?;
+    match args_string {
+        "" => { 
+                let response = MessageBuilder::new()
+                .push_bold_safe("Welcome to CafeBot!\n \n")
+                .push("Commands:\n")
+                .push("^help [page] - show help pages. Specify no page for the general help or use one of the following categories: admin\n")
+                .push("^ping - pong\n")
+                .push("^say - repeat anything that comes after this command\n")
+                .push("^count - count as high as you can\n")
+                .push("^hair - see how bald you are (also ^bald) \n")
+                .push("^zote - find precepts of zote. ^zote [number] for a specific precept, ^zote random for a random one, and ^zote bald for our own precept.\n")
+                .push("^bruh - get a random bruh emote")
+                .push("^latency - see latency to bot host. currently broken.\n")
+                .build();
+            msg.reply(&ctx.http, &response).await?;
         }
-    } else {
-        msg.reply(&ctx.http, "Please enter either no category for general help or one of these categories: admin.").await?;
+        "admin" => {
+            if let Some(member) = &msg.member {
+            // only let admins ask for admin help
+                for role in &member.roles {
+                    if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
+                        let response = MessageBuilder::new()
+                            .push_bold_safe("CafeBot admin\n \n")
+                            .push("^admin_test - test if you are an admin\n")
+                            .push("^status [string] - change the bot's status (will display as 'Playing [entered status]')\n")
+                            .push("^slow_mode [seconds] - set the slow mode in that channel to a certain amount of seconds. Set to 0 to turnoff slow mode.\n")
+                            .build();
+                        msg.reply(&ctx.http, &response).await?;
+                    }
+                }
+            } else {
+                msg.reply(&ctx.http, "You can't access this help page").await?;
+            }
+        }
+        _ => { msg.reply(&ctx.http, "Please enter either no category for general help or one of these categories: admin.").await?;},
     }
     Ok(())
 }
