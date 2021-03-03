@@ -8,3 +8,5 @@ edition = "2018"
 serenity = { version = "0.10.2", default-features = true, features = ["framework", "standard_framework", "http", "client", "gateway", "rustls_backend", "model"] }
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 rand = "0.8.3"
+chrono = "0.4"
+chrono-humanize = "0.1.2"

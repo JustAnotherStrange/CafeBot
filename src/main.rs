@@ -10,10 +10,12 @@ use std::{
 };
 
 use rand::{thread_rng, Rng};
+use chrono::prelude::*;
+// use chrono_humanize::HumanTime;
 
 use serenity::{
     async_trait,
-    client::{Client, Context, EventHandler, bridge::gateway::{ShardId, ShardManager}},
+    client::{Client, Context, EventHandler, bridge::gateway::{ShardManager}}, // ShardId
     framework::{
         StandardFramework,
         standard::{
@@ -157,17 +159,21 @@ async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     Ok(())
 }
 
-fn sarcastify(s: &str) -> String {
-    let mut st = String::new();
+fn sarcastify(to_sarc: &str) -> String {
+    let mut sarcasted = String::new();
     let mut cap: bool = true;
-    for c in s.chars() {
+    for cur in to_sarc.chars() {
         // Make it be alternating caps/lowercase
         cap = !cap;
         // if it can't be uppercase, just use the same char
-        let ch = if cap { c.to_uppercase().nth(0).unwrap_or(c) } else { c.to_lowercase().nth(0).unwrap_or(c) };
-        st.push(ch);
+        let to_push = if cap { 
+            cur.to_uppercase().nth(0).unwrap_or(cur) 
+        } else { 
+            cur.to_lowercase().nth(0).unwrap_or(cur) 
+        };
+        sarcasted.push(to_push);
     }
-    st
+    sarcasted
 }
 
 #[command]
@@ -283,44 +289,30 @@ async fn bruh(ctx: &Context, msg: &Message) -> CommandResult {
         2 => msg.reply(&ctx.http, "<:burh:721124449252016158>"),
         3 => msg.reply(&ctx.http, "<:certifiedbruhmoment:704060742034522213>"),
         4 => msg.reply(&ctx.http, "<:bruh100:679483886241185823>"),
-        _ => msg.reply(&ctx.http, "random number generation range broke."),
+        _ => unreachable!(),
     }.await?;
     Ok(())
 }
 #[command]
 #[only_in(guilds)]
-// from https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L437
+// works but prints it as: -PT0.313701128S (this probably means 313ms) 
 async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
-    // The shard manager is an interface for mutating, stopping, restarting, and
-    // retrieving information about shards.
-    let data = ctx.data.read().await;
-
-    let shard_manager = match data.get::<ShardManagerContainer>() {
-        Some(v) => v,
-        None => {
-            msg.reply(ctx, "There was a problem getting the shard manager").await?;
-
-            return Ok(());
-        },
-    };
-
-    let manager = shard_manager.lock().await;
-    let runners = manager.runners.lock().await;
-
-    // Shards are backed by a "shard runner" responsible for processing events
-    // over the shard, so we'll get the information about the shard runner for
-    // the shard this command was sent over.
-    let runner = match runners.get(&ShardId(ctx.shard_id)) {
-        Some(runner) => runner,
-        None => {
-            msg.reply(ctx,  "No shard found").await?;
-
-            return Ok(());
-        },
-    };
-
-    msg.reply(ctx, &format!("The shard latency is {:?}", runner.latency)).await?;
-
+    // record timestamp of message
+    let time = msg.timestamp;
+    // send "testing message" 
+    // msg.reply(&ctx.http, "testing...").await?;
+    // record current timestamp
+    let utc: DateTime<Utc> = Utc::now();
+    // subtract
+    let sub = time - utc;
+    // HumanTime makes it read as "now" lol.
+    // let ht = HumanTime::from(sub);
+    // send another message
+    let response = MessageBuilder::new()
+        .push("latency is ")
+        .push(sub)
+        .build();
+    msg.reply(&ctx.http, &response).await?;
     Ok(())
 }
 
@@ -340,7 +332,6 @@ async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                     .build();
                 msg.reply(&ctx.http, &response).await?;
                 return Ok(());
-                break;
             }
         }
     }
