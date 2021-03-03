@@ -297,20 +297,9 @@ async fn bruh(ctx: &Context, msg: &Message) -> CommandResult {
 #[only_in(guilds)]
 // works but prints it as: -PT0.313701128S (this probably means 313ms) 
 async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
-    // record timestamp of message
-    let time = msg.timestamp;
-    // send "testing message" 
-    // msg.reply(&ctx.http, "testing...").await?;
-    // record current timestamp
-    let utc: DateTime<Utc> = Utc::now();
-    // subtract
-    let sub = time - utc;
-    // HumanTime makes it read as "now" lol.
-    // let ht = HumanTime::from(sub);
-    // send another message
+    let sub: chrono::Duration = msg.timestamp - Utc::now();
     let response = MessageBuilder::new()
-        .push("latency is ")
-        .push(sub)
+        .push(format!("latency is {} miliseconds!", sub.num_milliseconds().abs()))
         .build();
     msg.reply(&ctx.http, &response).await?;
     Ok(())
