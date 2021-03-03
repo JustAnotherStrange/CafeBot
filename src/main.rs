@@ -299,7 +299,7 @@ async fn bruh(ctx: &Context, msg: &Message) -> CommandResult {
 async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
     let sub: chrono::Duration = msg.timestamp - Utc::now();
     let response = MessageBuilder::new()
-        .push(format!("latency is {} miliseconds", sub.num_milliseconds().abs()))
+        .push(format!("latency is {} milliseconds", sub.num_milliseconds().abs()))
         .build();
     msg.reply(&ctx.http, &response).await?;
     Ok(())
