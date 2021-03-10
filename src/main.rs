@@ -181,16 +181,8 @@ async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let mut sarcasted = sarcastify(&args.rest());
     sarcasted.insert_str(0, "@: ");
     sarcasted.insert_str(1, &msg.author.name);
-    match &msg.referenced_message {
-        Some(_) => {
-            modify(ctx, msg, &sarcasted).await?;
-            Ok(())
-        }
-        None => {
-            modify(ctx, msg, &sarcasted).await?;
-            Ok(())
-        }
-    }
+    modify(ctx, msg, &sarcasted).await?;
+    Ok(())
 }
 
 fn sarcastify(to_sarc: &str) -> String {
