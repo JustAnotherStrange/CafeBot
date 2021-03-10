@@ -11,6 +11,7 @@ use std::{
 };
 
 use chrono::prelude::*;
+use owoify_rs::{Owoifiable, OwoifyLevel};
 use rand::{thread_rng, Rng};
 // use chrono_humanize::HumanTime;
 
@@ -50,7 +51,7 @@ struct Handler;
 #[group]
 // List of commands
 #[commands(
-    say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test
+    say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test, owo
 )]
 struct General;
 
@@ -126,7 +127,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .clean_role(false)
     };
     let content = content_safe(&ctx.cache, &args.rest(), &settings).await; // this content safety returns @invalid-user for every user ping weirdly
-    delete_and_send(ctx, msg, args.rest()).await?;
+    modify(ctx, msg, args.rest()).await?;
     if !(std::path::Path::new("log").exists()) {
         fs::File::create("log")?; // create log file if it doesn't already exist
     }
@@ -157,11 +158,19 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     Ok(())
 }
 
-#[inline] // what does this do?
-async fn delete_and_send(ctx: &Context, msg: &Message, to_send: &str) -> CommandResult {
+#[inline]
+async fn modify(ctx: &Context, msg: &Message, to_send: &str) -> CommandResult {
     let d = msg.delete(&ctx.http);
-    let m = msg.channel_id.say(&ctx.http, &to_send);
-    tokio::try_join!(d, m)?; // do both at the same time and continue once both return Ok(). It'll quit if one returns any Err()
+    match &msg.referenced_message {
+        Some(m) => {
+            let m = m.reply(&ctx.http, &to_send);
+            tokio::try_join!(d, m)?; // do both at the same time and continue once both return Ok(). It'll quit if one returns any Err()
+        }
+        None => {
+            let m = msg.channel_id.say(&ctx.http, &to_send);
+            tokio::try_join!(d, m)?;
+        }
+    }
     Ok(())
 }
 #[command]
@@ -173,14 +182,12 @@ async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     sarcasted.insert_str(0, "@: ");
     sarcasted.insert_str(1, &msg.author.name);
     match &msg.referenced_message {
-        Some(m) => {
-            let a = m.reply(&ctx.http, &sarcasted);
-            let b = msg.delete(&ctx.http);
-            tokio::try_join!(a, b)?;
+        Some(_) => {
+            modify(ctx, msg, &sarcasted).await?;
             Ok(())
         }
         None => {
-            delete_and_send(ctx, msg, &sarcasted).await?;
+            modify(ctx, msg, &sarcasted).await?;
             Ok(())
         }
     }
@@ -203,6 +210,15 @@ fn sarcastify(to_sarc: &str) -> String {
     sarcasted
 }
 
+#[command]
+#[only_in(guilds)]
+async fn owo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let mut response = args.rest().owoify(&OwoifyLevel::Uwu);
+    response.insert_str(0, "@: ");
+    response.insert_str(1, &msg.author.name);
+    modify(ctx, msg, &response).await?;
+    Ok(())
+}
 #[command]
 #[only_in(guilds)]
 // ping pong command
