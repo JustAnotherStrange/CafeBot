@@ -1,32 +1,38 @@
 // TODO:
 #![allow(non_snake_case)] // because of CafeBot name of crate
 use std::{
-    env, 
-    fs, fs::{File, OpenOptions}, 
-    io::{BufRead, BufReader, prelude::*},
-    time::{SystemTime, UNIX_EPOCH},
+    env,
+    fs,
+    fs::{File, OpenOptions},
+    io::{prelude::*, BufRead, BufReader},
     // collections::{HashMap, HashSet}, fmt::Write, sync::Arc
-    sync::Arc
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
 };
 
-use rand::{thread_rng, Rng};
 use chrono::prelude::*;
+use rand::{thread_rng, Rng};
 // use chrono_humanize::HumanTime;
 
 use serenity::{
     async_trait,
-    client::{Client, Context, EventHandler, bridge::gateway::{ShardManager}}, // ShardId
+    client::{bridge::gateway::ShardManager, Client, Context, EventHandler}, // ShardId
     framework::{
-        StandardFramework,
         standard::{
-            Args, CommandResult,
             macros::{command, group},
+            Args, CommandResult,
         },
+        StandardFramework,
     },
     // http::Http,
-    model::{channel::{Message, Channel}, gateway::{Ready, Activity}, user::OnlineStatus, permissions::Permissions},
+    model::{
+        channel::{Channel, Message},
+        gateway::{Activity, Ready},
+        permissions::Permissions,
+        user::OnlineStatus,
+    },
     prelude::*,
-    utils::{MessageBuilder, content_safe, ContentSafeOptions},
+    utils::{content_safe, ContentSafeOptions, MessageBuilder},
 };
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
@@ -42,25 +48,29 @@ impl TypeMapKey for ShardManagerContainer {
 struct Handler;
 
 #[group]
-// List of commands 
-#[commands(say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test)]
+// List of commands
+#[commands(
+    say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test
+)]
 struct General;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn ready(&self, ctx: Context, ready: Ready) { // inform when connected
+    async fn ready(&self, ctx: Context, ready: Ready) {
+        // inform when connected
         println!("Connected as {}", ready.user.name);
         let activity = Activity::playing("vid eo g ame s"); // other Activity::* - listening, competing, streaming
         ctx.set_presence(Some(activity), OnlineStatus::Online).await; // set status to "Playing vid eo g ame s"
     }
     async fn message(&self, ctx: Context, msg: Message) {
-        // ----- subreddit detecting and linking by g_w1 ----- 
+        // ----- subreddit detecting and linking by g_w1 -----
         if !(msg.content.to_lowercase().contains("://reddit.com")) {
             if let Some(l) = &msg.content.find("r/") {
                 if *l == 0 || msg.content.chars().collect::<Vec<char>>()[l - 1].is_whitespace() {
                     let mut sub_reddit = String::new();
-                    for (i,c) in msg.content.chars().into_iter().enumerate() {
-                        if i < *l + 2 { // + 2 because of r/
+                    for (i, c) in msg.content.chars().into_iter().enumerate() {
+                        if i < *l + 2 {
+                            // + 2 because of r/
                             continue;
                         }
                         if c == ' ' {
@@ -68,7 +78,10 @@ impl EventHandler for Handler {
                         }
                         sub_reddit.push(c);
                     }
-                    if let Err(oof) = msg.reply(&ctx.http, format!("<https://reddit.com/r/{}>", sub_reddit)).await {
+                    if let Err(oof) = msg
+                        .reply(&ctx.http, format!("<https://reddit.com/r/{}>", sub_reddit))
+                        .await
+                    {
                         println!("oofed: {}", oof);
                     }
                 }
@@ -81,12 +94,13 @@ impl EventHandler for Handler {
 #[tokio::main]
 async fn main() {
     // Take token from the env var DISCORD_TOKEN
-    let token = env::var("DISCORD_TOKEN")
-        .expect("Expected a token in the environment");
+    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     let framework = StandardFramework::new()
-        .configure(|c| c // configure command framework with the prefix "^" and allow whitespaces (e.g. `^ ping")
-                   .with_whitespace(true)
-                   .prefix("^"))
+        .configure(|c| {
+            c // configure command framework with the prefix "^" and allow whitespaces (e.g. `^ ping")
+                .with_whitespace(true)
+                .prefix("^")
+        })
         .group(&GENERAL_GROUP);
     let mut client = Client::builder(&token)
         .event_handler(Handler)
@@ -112,11 +126,11 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .clean_role(false)
     };
     let content = content_safe(&ctx.cache, &args.rest(), &settings).await; // this content safety returns @invalid-user for every user ping weirdly
-    delete_and_send(ctx, msg,  args.rest()).await?;
+    delete_and_send(ctx, msg, args.rest()).await?;
     if !(std::path::Path::new("log").exists()) {
         fs::File::create("log")?; // create log file if it doesn't already exist
     }
-    // logging ---- 
+    // logging ----
     let mut file = OpenOptions::new()
         .read(true)
         .write(true)
@@ -124,7 +138,9 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .open("log")
         .expect("failed to open log file");
     let start = SystemTime::now();
-    let unixtime = start.duration_since(UNIX_EPOCH).expect("Time went backwards");
+    let unixtime = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
     let content_to_log = MessageBuilder::new()
         .push("at ")
         .push(unixtime.as_secs())
@@ -136,27 +152,38 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .push(msg.channel_id)
         .push("\n")
         .build();
-    file.write_all(content_to_log.as_bytes()).expect("failed to write content to log file"); 
+    file.write_all(content_to_log.as_bytes())
+        .expect("failed to write content to log file");
     Ok(())
 }
 
-#[inline] // what does this do? 
+#[inline] // what does this do?
 async fn delete_and_send(ctx: &Context, msg: &Message, to_send: &str) -> CommandResult {
     let d = msg.delete(&ctx.http);
     let m = msg.channel_id.say(&ctx.http, &to_send);
-    tokio::try_join!(d,m)?; // do both at the same time and continue once both return Ok(). It'll quit if one returns any Err()
+    tokio::try_join!(d, m)?; // do both at the same time and continue once both return Ok(). It'll quit if one returns any Err()
     Ok(())
 }
 #[command]
 #[only_in(guilds)]
 #[aliases("s", "/s")]
-// sarcasm command for tExT lIkE tHiS. By g_w1 
+// sarcasm command for tExT lIkE tHiS. By g_w1
 async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let mut sarcasted = sarcastify(&args.rest());
     sarcasted.insert_str(0, "@: ");
     sarcasted.insert_str(1, &msg.author.name);
-    delete_and_send(ctx, msg, &sarcasted).await?;
-    Ok(())
+    match &msg.referenced_message {
+        Some(m) => {
+            let a = m.reply(&ctx.http, &sarcasted);
+            let b = msg.delete(&ctx.http);
+            tokio::try_join!(a, b)?;
+            Ok(())
+        }
+        None => {
+            delete_and_send(ctx, msg, &sarcasted).await?;
+            Ok(())
+        }
+    }
 }
 
 fn sarcastify(to_sarc: &str) -> String {
@@ -166,10 +193,10 @@ fn sarcastify(to_sarc: &str) -> String {
         // Make it be alternating caps/lowercase
         cap = !cap;
         // if it can't be uppercase, just use the same char
-        let to_push = if cap { 
-            cur.to_uppercase().nth(0).unwrap_or(cur) 
-        } else { 
-            cur.to_lowercase().nth(0).unwrap_or(cur) 
+        let to_push = if cap {
+            cur.to_uppercase().nth(0).unwrap_or(cur)
+        } else {
+            cur.to_lowercase().nth(0).unwrap_or(cur)
         };
         sarcasted.push(to_push);
     }
@@ -201,7 +228,9 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
     // convert the string from reading the file into an i32 for performing math on it
     let len = file.len();
     file.truncate(len - 1);
-    let file_int: i32 = file.parse().expect("Failed to parse file string into integer");
+    let file_int: i32 = file
+        .parse()
+        .expect("Failed to parse file string into integer");
     let to_write = file_int + 1;
     let to_write_string = to_write.to_string();
     let to_write_final = String::new() + to_write_string.as_str() + "\n";
@@ -240,7 +269,11 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     } else if args_string == "bald" {
         msg.reply(&ctx.http, "<:zote:809592148805681193> Precept Bald: 'Never Be Bald'. A head without hair will make you weaker in battle. You must avoid this at all costs by growing hair.").await?;
     } else if zote_line > 57 {
-        msg.reply(&ctx.http, "Please select a number from 1 to 57, or 'random', 'all', or 'bald'.").await?; // because there are only 57 precepts
+        msg.reply(
+            &ctx.http,
+            "Please select a number from 1 to 57, or 'random', 'all', or 'bald'.",
+        )
+        .await?; // because there are only 57 precepts
     } else {
         // take that line of the zote file and print it.
         let filename = "zote";
@@ -248,7 +281,7 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         let reader = BufReader::new(file);
         for (index, line) in reader.lines().enumerate() {
             if index + 1 == zote_line {
-                let line = line.unwrap(); 
+                let line = line.unwrap();
                 // Say the line along with a zote emoji from CyberCafe.
                 let response = MessageBuilder::new()
                     .push("<:zote:809592148805681193> ")
@@ -271,7 +304,11 @@ async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let hairlevel = thread_rng().gen_range(0..101);
     let args_string = args.rest();
     let response = MessageBuilder::new()
-        .push_bold_safe(if args_string == "" { &msg.author.name } else { args_string }) // use the arguments for the person to be tested
+        .push_bold_safe(if args_string == "" {
+            &msg.author.name
+        } else {
+            args_string
+        }) // use the arguments for the person to be tested
         .push(" has ")
         .push_bold_safe(&hairlevel)
         .push("% hair.")
@@ -290,14 +327,20 @@ async fn bruh(ctx: &Context, msg: &Message) -> CommandResult {
         3 => msg.reply(&ctx.http, "<:certifiedbruhmoment:704060742034522213>"),
         4 => msg.reply(&ctx.http, "<:bruh100:679483886241185823>"),
         _ => unreachable!(),
-    }.await?;
+    }
+    .await?;
     Ok(())
 }
 #[command]
 #[only_in(guilds)]
+// works but prints it as: -PT0.313701128S (this probably means 313ms)
 async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
     let sub: chrono::Duration = Utc::now() - msg.timestamp;
-    msg.reply(&ctx.http, format!("latency is {} milliseconds", sub.num_milliseconds())).await?;
+    msg.reply(
+        &ctx.http,
+        format!("latency is {} milliseconds", sub.num_milliseconds()),
+    )
+    .await?;
     Ok(())
 }
 
@@ -306,7 +349,11 @@ async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
 async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     if let Some(member) = &msg.member {
         for role in &member.roles {
-            if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
+            if role
+                .to_role_cached(&ctx.cache)
+                .await
+                .map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR))
+            {
                 let name = args.message();
                 ctx.set_activity(Activity::playing(&name)).await;
                 let response = MessageBuilder::new()
@@ -330,7 +377,11 @@ async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 async fn admin_test(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     if let Some(member) = &msg.member {
         for role in &member.roles {
-            if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
+            if role
+                .to_role_cached(&ctx.cache)
+                .await
+                .map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR))
+            {
                 msg.reply(&ctx.http, "You are an admin.").await?;
                 return Ok(());
             }
@@ -348,16 +399,35 @@ async fn admin_test(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
 async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if let Some(member) = &msg.member {
         for role in &member.roles {
-            if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
+            if role
+                .to_role_cached(&ctx.cache)
+                .await
+                .map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR))
+            {
                 // if you have reached here, you are admin. now do the command.
                 let say_content = if let Ok(slow_mode_rate_seconds) = args.single::<u64>() {
-                    if let Err(why) = msg.channel_id.edit(&ctx.http, |c| c.slow_mode_rate(slow_mode_rate_seconds)).await {
-                        format!("Failed to set slow mode to `{}` seconds. because {}", slow_mode_rate_seconds, why)
+                    if let Err(why) = msg
+                        .channel_id
+                        .edit(&ctx.http, |c| c.slow_mode_rate(slow_mode_rate_seconds))
+                        .await
+                    {
+                        format!(
+                            "Failed to set slow mode to `{}` seconds. because {}",
+                            slow_mode_rate_seconds, why
+                        )
                     } else {
-                        format!("Successfully set slow mode rate to `{}` seconds.", slow_mode_rate_seconds)
+                        format!(
+                            "Successfully set slow mode rate to `{}` seconds.",
+                            slow_mode_rate_seconds
+                        )
                     }
-                } else if let Some(Channel::Guild(channel)) = msg.channel_id.to_channel_cached(&ctx.cache).await {
-                    format!("Current slow mode rate is `{}` seconds.", channel.slow_mode_rate.unwrap_or(0))
+                } else if let Some(Channel::Guild(channel)) =
+                    msg.channel_id.to_channel_cached(&ctx.cache).await
+                {
+                    format!(
+                        "Current slow mode rate is `{}` seconds.",
+                        channel.slow_mode_rate.unwrap_or(0)
+                    )
                 } else {
                     "Failed to find channel in cache.".to_string()
                 };
@@ -371,14 +441,14 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
 
 #[command]
 #[only_in(guilds)]
-// Simple help command. 
+// Simple help command.
 // I tried to make it use embeds but it was a hassle and didn't work after a lot of debugging.
 async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // build the message
     let args_string = args.rest();
     match args_string {
-        "" => { 
-                let response = MessageBuilder::new()
+        "" => {
+            let response = MessageBuilder::new()
                 .push_bold_safe("Welcome to CafeBot!\n \n")
                 .push("Commands:\n")
                 .push("^help [page] - show help pages. Specify no page for the general help or use one of the following categories: admin\n")
@@ -394,9 +464,13 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         }
         "admin" => {
             if let Some(member) = &msg.member {
-            // only let admins ask for admin help
+                // only let admins ask for admin help
                 for role in &member.roles {
-                    if role.to_role_cached(&ctx.cache).await.map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR)) {
+                    if role
+                        .to_role_cached(&ctx.cache)
+                        .await
+                        .map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR))
+                    {
                         let response = MessageBuilder::new()
                             .push_bold_safe("CafeBot admin\n \n")
                             .push("^admin_test - test if you are an admin\n")
@@ -408,10 +482,13 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                     }
                 }
             } else {
-                msg.reply(&ctx.http, "You can't access this help page").await?;
+                msg.reply(&ctx.http, "You can't access this help page")
+                    .await?;
             }
         }
-        _ => { msg.reply(&ctx.http, "Please enter either no category for general help or one of these categories: admin.").await?;},
+        _ => {
+            msg.reply(&ctx.http, "Please enter either no category for general help or one of these categories: admin.").await?;
+        }
     }
     Ok(())
 }
