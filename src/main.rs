@@ -10,7 +10,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use chrono::{Utc, prelude::*, Duration};
+use chrono::{prelude::*, Duration, Utc};
 use owoify_rs::{Owoifiable, OwoifyLevel};
 use rand::{thread_rng, Rng};
 // use chrono_humanize::HumanTime;
@@ -51,7 +51,8 @@ struct Handler;
 #[group]
 // List of commands
 #[commands(
-    say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test, owo, daily
+    say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test, owo,
+    daily
 )]
 struct General;
 
@@ -220,7 +221,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
     let filename = format!("daily/{}", msg.author);
     let mut new = false;
     if !(std::path::Path::new(&filename).exists()) {
-        fs::File::create(&filename)?; 
+        fs::File::create(&filename)?;
         new = true;
     }
     let mut file = OpenOptions::new()
@@ -253,18 +254,23 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
                 let response = format!("Daily complete! This is day {:?}.", amount_of_lines);
                 msg.reply(&ctx.http, &response).await?;
             } else {
-                msg.reply(&ctx.http, "Streak lost! Run ^daily again to start fresh.").await?;
+                msg.reply(&ctx.http, "Streak lost! Run ^daily again to start fresh.")
+                    .await?;
                 fs::remove_file(&filename).unwrap();
             }
         } else {
-            msg.reply(&ctx.http, "Sorry, you have already done your daily for today.").await?;
+            msg.reply(
+                &ctx.http,
+                "Sorry, you have already done your daily for today.",
+            )
+            .await?;
         }
     }
     Ok(())
 }
 
 fn get_content_of_last_line(filename: &String) -> (String, usize) {
-    let  file = OpenOptions::new()
+    let file = OpenOptions::new()
         .read(true)
         .write(true)
         .append(true)
