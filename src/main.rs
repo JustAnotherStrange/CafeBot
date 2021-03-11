@@ -539,6 +539,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .push("^latency - see latency to bot host.\n")
                 .push("^sarcasm [^s, ^/s] - modify your message to bE lIkE tHiS.\n")
                 .push("^owo - modify your message to be owoified.\n")
+                .push("^daily - run this daily to maintain a streak. forgetting one day will result in a reset.")
                 .build();
             msg.reply(&ctx.http, &response).await?;
         }
