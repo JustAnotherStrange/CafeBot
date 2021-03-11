@@ -12,3 +12,6 @@ Cargo.lock
 # count and log files
 count
 log
+
+# daily files
+/daily/
