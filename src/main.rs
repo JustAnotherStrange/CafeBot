@@ -10,7 +10,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use chrono::prelude::*;
+use chrono::{Utc, prelude::*, Duration};
 use owoify_rs::{Owoifiable, OwoifyLevel};
 use rand::{thread_rng, Rng};
 // use chrono_humanize::HumanTime;
@@ -51,7 +51,7 @@ struct Handler;
 #[group]
 // List of commands
 #[commands(
-    say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test, owo
+    say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test, owo, daily
 )]
 struct General;
 
@@ -138,8 +138,7 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .append(true)
         .open("log")
         .expect("failed to open log file");
-    let start = SystemTime::now();
-    let unixtime = start
+    let unixtime = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards");
     let content_to_log = MessageBuilder::new()
@@ -211,6 +210,77 @@ async fn owo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     modify(ctx, msg, &response).await?;
     Ok(())
 }
+
+#[command]
+#[only_in(guilds)]
+async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
+    if !(std::path::Path::new("daily").exists()) {
+        fs::create_dir("daily").unwrap();
+    }
+    let filename = format!("daily/{}", msg.author);
+    let mut new = false;
+    if !(std::path::Path::new(&filename).exists()) {
+        fs::File::create(&filename)?; 
+        new = true;
+    }
+    let mut file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .append(true)
+        .open(&filename)
+        .expect("failed to open daily file");
+    let date_string = format!("{}", Local::now());
+    let date_parsed = format!("{}", &date_string[0..10]);
+    let day = Duration::hours(24);
+    let yesterday_string = format!("{}", Local::now() - day);
+    let yesterday_parsed = format!("{}", &yesterday_string[0..10]);
+    let line_thing = get_content_of_last_line(&filename);
+    let content_of_last_line = line_thing.0;
+    let amount_of_lines = line_thing.1;
+    // let date_line = format!("{}\n", date_parsed);
+    if new {
+        let content_to_log = format!("{}\n", date_parsed);
+        file.write_all(content_to_log.as_bytes())
+            .expect("failed to write content to log file");
+        let response = format!("Daily complete! This is day {:?}.", amount_of_lines);
+        msg.reply(&ctx.http, &response).await?;
+    } else {
+        if content_of_last_line != date_parsed {
+            if content_of_last_line == yesterday_parsed {
+                let content_to_log = format!("{}\n", date_parsed);
+                file.write_all(content_to_log.as_bytes())
+                    .expect("failed to write content to log file");
+                let response = format!("Daily complete! This is day {:?}.", amount_of_lines);
+                msg.reply(&ctx.http, &response).await?;
+            } else {
+                msg.reply(&ctx.http, "Streak lost! Run ^daily again to start fresh.").await?;
+                fs::remove_file(&filename).unwrap();
+            }
+        } else {
+            msg.reply(&ctx.http, "Sorry, you have already done your daily for today.").await?;
+        }
+    }
+    Ok(())
+}
+
+fn get_content_of_last_line(filename: &String) -> (String, usize) {
+    let  file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .append(true)
+        .open(&filename)
+        .expect("failed to open daily file.");
+    let reader = BufReader::new(file);
+    let mut content_of_last_line = String::new();
+    let mut amount_of_lines = 0;
+    for (i, line) in reader.lines().enumerate() {
+        amount_of_lines = i;
+        content_of_last_line = line.unwrap();
+    }
+    amount_of_lines += 1;
+    return (content_of_last_line, amount_of_lines);
+}
+
 #[command]
 #[only_in(guilds)]
 // ping pong command
