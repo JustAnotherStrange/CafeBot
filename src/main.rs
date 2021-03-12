@@ -292,52 +292,47 @@ fn get_content_of_last_line(filename: &String) -> (String, usize) {
 
 #[command]
 // TODO:
-async fn xkcd(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    let num: i32 = args.rest().trim().parse().unwrap_or(456789);
+async fn xkcd(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    let num = args.single::<u32>().unwrap_or(456789); // take the first argument and try to convert to u32. if fail, set to 456789 (for later)
+    // make https request with reqwest to find the number of most recent comic
     let resp = reqwest::get("https://xkcd.com/info.0.json")
         .await?
         .text()
         .await?;
-    let json: Value = serde_json::from_str(&resp)?;
-    // if num != 100000, do all of this
-    let max_num: i32 = format!("{}", json["num"]).trim().parse().unwrap();
+    let json: Value = serde_json::from_str(&resp)?; // json deserialize
+    let max_num: u32 = format!("{}", json["num"]).trim().parse().unwrap(); // format the max num into i32
     if num > max_num {
-        if num == 456789 {
-            if args.rest() == "" {
-                print_xkcd(max_num, msg, ctx).await?;
-            } else if args.rest() == "random" {
-                let rand_num = thread_rng().gen_range(0..max_num);
-                print_xkcd(rand_num, msg, ctx).await?;
-            } else {
-                let response = format!(
-                    "Please enter no arguments, 'random', or a number between 1 and {}.",
-                    max_num
-                );
-                msg.reply(&ctx.http, &response).await?;
-            }
+        // if the number is too high. this will also trigger when it becomes 456789 after failing to parse into u32
+        if args.rest() == "" {
+            // if no arguments, send latest comic
+            print_xkcd(max_num, msg, ctx).await?;
+        } else if args.single::<String>().unwrap() == "random" {
+            // if argument is "random", send a random comic
+            let rand_num = thread_rng().gen_range(0..max_num);
+            print_xkcd(rand_num, msg, ctx).await?;
         } else {
+            // finally, if the arguments were neither nothing nor random, this means that they
+            // entered a number too large or less than zero (due to the nature of hte u32 type)
             let response = format!(
                 "Please enter no arguments, 'random', or a number between 1 and {}.",
                 max_num
             );
             msg.reply(&ctx.http, &response).await?;
-            return Ok(());
         }
-    } else if num <= 0 {
-        let response = format!("please enter a number between 1 and {}.", max_num);
-        msg.reply(&ctx.http, &response).await?;
     } else {
+        // if number in between 1 and max_num, send its corresponding comic.
         print_xkcd(num, msg, ctx).await?;
         return Ok(());
     }
     Ok(())
 }
 
-// #[inline]
-async fn print_xkcd(num: i32, msg: &Message, ctx: &Context) -> CommandResult {
-    let link = format!("https://xkcd.com/{}/info.0.json", num);
-    let comic = reqwest::get(link).await?.text().await?;
-    let json: Value = serde_json::from_str(&comic)?;
+// send xkcd comics by passing a u32 for the comics number
+async fn print_xkcd(num: u32, msg: &Message, ctx: &Context) -> CommandResult {
+    let link = format!("https://xkcd.com/{}/info.0.json", num); // insert number into link for metadata request
+    let comic = reqwest::get(link).await?.text().await?; // make https request
+    let json: Value = serde_json::from_str(&comic)?; // json parse metadata
+    // set vars from metadata and format titles, dates, etc
     let title = format!(
         "**xkcd {}: {}**",
         json["num"].to_string(),
@@ -351,6 +346,7 @@ async fn print_xkcd(num: i32, msg: &Message, ctx: &Context) -> CommandResult {
     );
     let image_link = rjq(json["img"].to_string());
     let desc = rjq(json["alt"].to_string());
+    // send message with cool embed stuff and image link as an attachment
     let _ = msg
         .channel_id
         .send_message(&ctx.http, |m| {
@@ -375,13 +371,9 @@ async fn print_xkcd(num: i32, msg: &Message, ctx: &Context) -> CommandResult {
 #[inline]
 // remove json quotes
 fn rjq(s: String) -> String {
-    // remove the end quotes
-    let mut st = String::from(&s);
-    let len = st.len();
-    st.truncate(len - 1);
-    // remove beginning quote
-    let newst = st[1..].to_string();
-    return newst;
+    let mut st = String::from(&s); // because mutable String passing weird
+    st.truncate(st.len() - 1); // remove ending quote
+    return st[1..].to_string(); // remove beginning quote
 }
 
 #[command]
@@ -548,7 +540,7 @@ async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 // https://github.com/serenity-rs/serenity/blob/dcc1ac4d0a12f24e998af3949e33ec352153a6af/examples/e05_command_framework/src/main.rs#L522
 #[command]
 #[only_in(guilds)]
-async fn admin_test(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+async fn admin_test(ctx: &Context, msg: &Message) -> CommandResult {
     if let Some(member) = &msg.member {
         for role in &member.roles {
             if role
@@ -606,6 +598,7 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
                     "Failed to find channel in cache.".to_string()
                 };
                 msg.reply(&ctx.http, say_content).await?;
+                return Ok(());
             }
         }
     }
@@ -619,8 +612,7 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
 // I tried to make it use embeds but it was a hassle and didn't work after a lot of debugging.
 async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // build the message
-    let args_string = args.rest();
-    match args_string {
+    match args.rest() {
         "" => {
             let response = MessageBuilder::new()
                 .push_bold_safe("Welcome to CafeBot!\n \n")
