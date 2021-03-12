@@ -6,11 +6,13 @@ use std::{
     fs::{File, OpenOptions},
     io::{prelude::*, BufRead, BufReader},
     time::{SystemTime, UNIX_EPOCH},
+    collections::HashMap,
 };
 
 use chrono::{prelude::*, Duration, Utc};
 use owoify_rs::{Owoifiable, OwoifyLevel};
 use rand::{thread_rng, Rng};
+use serde_json::{Result, Value};
 
 use serenity::{
     async_trait,
@@ -43,7 +45,7 @@ struct Handler;
 // List of commands
 #[commands(
     say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test, owo,
-    daily
+    daily, xkcd
 )]
 struct General;
 
@@ -105,7 +107,6 @@ async fn main() {
     }
 }
 #[command]
-#[only_in(guilds)]
 // Say command: repeat back what the user types, and then delete the user's original message
 async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let settings = if let Some(guild_id) = msg.guild_id {
@@ -164,7 +165,6 @@ async fn modify(ctx: &Context, msg: &Message, to_send: &str) -> CommandResult {
     Ok(())
 }
 #[command]
-#[only_in(guilds)]
 #[aliases("s", "/s")]
 // sarcasm command for tExT lIkE tHiS. By g_w1
 async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
@@ -193,7 +193,6 @@ fn sarcastify(to_sarc: &str) -> String {
 }
 
 #[command]
-#[only_in(guilds)]
 // owo command for text wike twis uwu
 async fn owo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let mut response = args.rest().owoify(&OwoifyLevel::Uwu); // use owoify-rs crate
@@ -204,7 +203,6 @@ async fn owo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
-#[only_in(guilds)]
 async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
     if !(std::path::Path::new("daily").exists()) {
         fs::create_dir("daily").unwrap(); // if folder "daily" doesn't exist, create it.
@@ -284,7 +282,57 @@ fn get_content_of_last_line(filename: &String) -> (String, usize) {
 }
 
 #[command]
-#[only_in(guilds)]
+// TODO:
+// Have all in one message using bot markdown formatting
+// Just ^xkcd will give the most recent
+// ^xkcd random
+async fn xkcd(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let num: i32 = args.rest().trim().parse().unwrap_or(100000);
+    let resp = reqwest::get("https://xkcd.com/info.0.json")
+        .await?
+        .text()
+        .await?;
+    let json: Value = serde_json::from_str(&resp)?;
+    let max_num: i32 = format!("{}", json["num"]).trim().parse().unwrap();
+    if num > max_num {
+        let response = format!("that comic hasn't come out yet. the most recent one was {}.", max_num);
+        msg.reply(&ctx.http, &response).await?;
+        return Ok(())
+    } else if num <= 0 {
+        let response = format!("please enter a number between 1 and {}.", max_num);
+        msg.reply(&ctx.http, &response).await?;
+    } else {
+        let link = format!("https://xkcd.com/{}/info.0.json", num);
+        let comic = reqwest::get(link)
+            .await?
+            .text()
+            .await?;
+        let json: Value = serde_json::from_str(&comic)?;
+        let date = format!("{}-{}-{}", rjq(json["month"].to_string()), rjq(json["day"].to_string()), rjq(json["year"].to_string()));
+        let title = format!("xkcd {}: {} - {}", json["num"].to_string(), rjq(json["safe_title"].to_string()), &date);
+        let response = MessageBuilder::new()
+            .push_bold_safe(&title)
+            .build();
+        msg.reply(&ctx.http, &response).await?;
+        let image_link = format!("{}", rjq(json["img"].to_string()));
+        msg.channel_id.say(&ctx.http, &image_link).await?;
+        msg.channel_id.say(&ctx.http, rjq(json["alt"].to_string())).await?;
+    }
+    Ok(())
+}
+
+#[inline]
+// remove json quotes
+fn rjq(s: String) -> String {
+    // remove the end quotes
+    let mut st = String::from(&s);
+    let len = st.len();
+    st.truncate(len - 1);
+    // remove beginning quote
+    let newst = st[1..].to_string();
+    return newst;
+}
+#[command]
 // ping pong command (used mostly for checking if bot is online)
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply(&ctx.http, "pong").await?;
@@ -292,7 +340,6 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-#[only_in(guilds)]
 // count command for increasing a counter every time it's ran.
 // uses a "./count" file in the crate's root directory.
 async fn count(ctx: &Context, msg: &Message) -> CommandResult {
@@ -320,7 +367,6 @@ async fn count(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-#[only_in(guilds)]
 // zote command for the precepts of zote from hollow knight.
 // Uses a file in the crate's root directory "./zote" should have been pulled as apart of git clone.
 async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
@@ -376,7 +422,6 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
-#[only_in(guilds)]
 #[aliases("bald")]
 // baldness calculator (actually just a random number generator).
 // You can also specify who to test (e.g. ^bald @joe)
@@ -398,7 +443,6 @@ async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
-#[only_in(guilds)]
 async fn bruh(ctx: &Context, msg: &Message) -> CommandResult {
     let choice = thread_rng().gen_range(1..5);
     match choice {
@@ -412,7 +456,6 @@ async fn bruh(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 #[command]
-#[only_in(guilds)]
 // works but prints it as: -PT0.313701128S (this probably means 313ms)
 async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
     let sub: chrono::Duration = Utc::now() - msg.timestamp;
@@ -425,7 +468,6 @@ async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-#[only_in(guilds)]
 async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     if let Some(member) = &msg.member {
         for role in &member.roles {
