@@ -1,8 +1,7 @@
 // TODO:
 #![allow(non_snake_case)] // because of CafeBot crate name
 use std::{
-    env,
-    fs,
+    env, fs,
     fs::{File, OpenOptions},
     io::{prelude::*, BufRead, BufReader},
     time::{SystemTime, UNIX_EPOCH},
@@ -15,7 +14,6 @@ use serde_json::Value;
 
 use serenity::{
     async_trait,
-    http::AttachmentType,
     client::{Client, Context, EventHandler},
     framework::{
         standard::{
@@ -24,6 +22,7 @@ use serenity::{
         },
         StandardFramework,
     },
+    http::AttachmentType,
     model::{
         channel::{Channel, Message},
         gateway::{Activity, Ready},
@@ -54,7 +53,11 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         // inform when connected
         println!("Connected as {}", ready.user.name);
-        ctx.set_presence(Some(Activity::playing("vid eo g ame s")), OnlineStatus::Online).await; // set status to "Playing vid eo g ame s" - other Activity::* - listening, competing, streaming
+        ctx.set_presence(
+            Some(Activity::playing("vid eo g ame s")),
+            OnlineStatus::Online,
+        )
+        .await; // set status to "Playing vid eo g ame s" - other Activity::* - listening, competing, streaming
     }
     async fn message(&self, ctx: Context, msg: Message) {
         // ----- subreddit detecting and linking by g_w1 -----
@@ -208,7 +211,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
         fs::create_dir("daily").unwrap(); // if folder "daily" doesn't exist, create it.
     }
     // create unique file for each user based on User ID in the "daily" directory
-    let filename = format!("daily/{}", msg.author); 
+    let filename = format!("daily/{}", msg.author);
     let mut new = false;
     if !(std::path::Path::new(&filename).exists()) {
         fs::File::create(&filename)?; // if a file with the filename of the ID of the author doesn't exist, create it.
@@ -225,10 +228,11 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
     let day = Duration::hours(24);
     let mut yesterday_string = format!("{}", Local::now() - day);
     yesterday_string = format!("{}", &yesterday_string[0..10]); // calculate yesterday's date similarly
-    let line_thing = get_content_of_last_line(&filename); // this function returns a tuple. String for content of last line, and usize for total amount of lines. 
+    let line_thing = get_content_of_last_line(&filename); // this function returns a tuple. String for content of last line, and usize for total amount of lines.
     let content_of_last_line = line_thing.0;
     let amount_of_lines = line_thing.1;
-    if new { // if the file has just been created, allow the Day 1 (previously it would say "last line != yesterdays date, so fail"
+    if new {
+        // if the file has just been created, allow the Day 1 (previously it would say "last line != yesterdays date, so fail"
         let content_to_log = format!("{}\n", date_string); // add newline to date_string
         file.write_all(content_to_log.as_bytes())
             .expect("failed to write content to log file");
@@ -239,19 +243,23 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
             .build();
         msg.reply(&ctx.http, &response).await?;
     } else {
-        if content_of_last_line != date_string { // if previous is not today
-            if content_of_last_line == yesterday_string { // if previous was yesterday
+        if content_of_last_line != date_string {
+            // if previous is not today
+            if content_of_last_line == yesterday_string {
+                // if previous was yesterday
                 let content_to_log = format!("{}\n", date_string);
                 file.write_all(content_to_log.as_bytes())
                     .expect("failed to write content to log file");
                 let response = format!("Daily complete! This is day {:?}.", amount_of_lines);
                 msg.reply(&ctx.http, &response).await?;
-            } else { // if previous not yesterday, lose streak
+            } else {
+                // if previous not yesterday, lose streak
                 msg.reply(&ctx.http, "Streak lost! Run ^daily again to start fresh.")
                     .await?;
                 fs::remove_file(&filename).unwrap();
             }
-        } else { // if previous was today
+        } else {
+            // if previous was today
             msg.reply(
                 &ctx.http,
                 "Sorry, you have already done your daily for today.",
@@ -273,11 +281,12 @@ fn get_content_of_last_line(filename: &String) -> (String, usize) {
     let reader = BufReader::new(file);
     let mut content_of_last_line = String::new();
     let mut amount_of_lines = 0;
-    for (i, line) in reader.lines().enumerate() { // read line by line using BufReader
+    for (i, line) in reader.lines().enumerate() {
+        // read line by line using BufReader
         amount_of_lines = i;
         content_of_last_line = line.unwrap();
     }
-    amount_of_lines += 1; // human readable lines (starts at 1, not 0) 
+    amount_of_lines += 1; // human readable lines (starts at 1, not 0)
     return (content_of_last_line, amount_of_lines);
 }
 
@@ -299,18 +308,27 @@ async fn xkcd(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             } else if args.rest() == "random" {
                 let rand_num = thread_rng().gen_range(0..max_num);
                 print_xkcd(rand_num, msg, ctx).await?;
+            } else {
+                let response = format!(
+                    "Please enter no arguments, 'random', or a number between 1 and {}.",
+                    max_num
+                );
+                msg.reply(&ctx.http, &response).await?;
             }
         } else {
-            let response = format!("Please enter no arguments, 'random', or a number between 1 and {}.", max_num);
+            let response = format!(
+                "Please enter no arguments, 'random', or a number between 1 and {}.",
+                max_num
+            );
             msg.reply(&ctx.http, &response).await?;
-            return Ok(())
+            return Ok(());
         }
     } else if num <= 0 {
         let response = format!("please enter a number between 1 and {}.", max_num);
         msg.reply(&ctx.http, &response).await?;
     } else {
         print_xkcd(num, msg, ctx).await?;
-        return Ok(())
+        return Ok(());
     }
     Ok(())
 }
@@ -318,32 +336,42 @@ async fn xkcd(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 // #[inline]
 async fn print_xkcd(num: i32, msg: &Message, ctx: &Context) -> CommandResult {
     let link = format!("https://xkcd.com/{}/info.0.json", num);
-    let comic = reqwest::get(link)
-        .await?
-        .text()
-        .await?;
+    let comic = reqwest::get(link).await?.text().await?;
     let json: Value = serde_json::from_str(&comic)?;
-    let title = format!("xkcd {}: {}", json["num"].to_string(), rjq(json["safe_title"].to_string()));
-    let date = format!("{}-{}-{}", rjq(json["month"].to_string()), rjq(json["day"].to_string()), rjq(json["year"].to_string()));
-    let image_link= rjq(json["img"].to_string());
+    let title = format!(
+        "**xkcd {}: {}**",
+        json["num"].to_string(),
+        rjq(json["safe_title"].to_string())
+    );
+    let date = format!(
+        "{}-{}-{}",
+        rjq(json["month"].to_string()),
+        rjq(json["day"].to_string()),
+        rjq(json["year"].to_string())
+    );
+    let image_link = rjq(json["img"].to_string());
     let desc = rjq(json["alt"].to_string());
-    let _ = msg.channel_id.send_message(&ctx.http, |m| {
-                m.content(&title);
-                m.embed(|e| {
-                    // e.title(&title);
-                    e.description(&date);
-                    e.image("attachment://&image_link");
-                    e.footer(|f| {
-                        f.text(&desc);
-                        f
-                    });
-                    e
+    let _ = msg
+        .channel_id
+        .send_message(&ctx.http, |m| {
+            m.content(&title);
+            m.embed(|e| {
+                // e.title(&title);
+                e.description(&date);
+                e.image("attachment://&image_link");
+                e.footer(|f| {
+                    f.text(&desc);
+                    f
                 });
-                m.add_file(AttachmentType::Image(&image_link));
-                m
-            }).await;
+                e
+            });
+            m.add_file(AttachmentType::Image(&image_link));
+            m
+        })
+        .await;
     Ok(())
 }
+
 #[inline]
 // remove json quotes
 fn rjq(s: String) -> String {
@@ -355,6 +383,7 @@ fn rjq(s: String) -> String {
     let newst = st[1..].to_string();
     return newst;
 }
+
 #[command]
 // ping pong command (used mostly for checking if bot is online)
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
