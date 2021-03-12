@@ -5,7 +5,6 @@ use std::{
     fs,
     fs::{File, OpenOptions},
     io::{prelude::*, BufRead, BufReader},
-    sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -29,7 +28,7 @@ use serenity::{
         permissions::Permissions,
         user::OnlineStatus,
     },
-    prelude::*,
+    // prelude::*,
     utils::{content_safe, ContentSafeOptions, MessageBuilder},
 };
 
