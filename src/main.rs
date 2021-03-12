@@ -15,6 +15,7 @@ use serde_json::Value;
 
 use serenity::{
     async_trait,
+    http::AttachmentType,
     client::{Client, Context, EventHandler},
     framework::{
         standard::{
@@ -282,44 +283,67 @@ fn get_content_of_last_line(filename: &String) -> (String, usize) {
 
 #[command]
 // TODO:
-// Have all in one message using bot markdown formatting
-// Just ^xkcd will give the most recent
-// ^xkcd random
 async fn xkcd(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    let num: i32 = args.rest().trim().parse().unwrap_or(100000);
+    let num: i32 = args.rest().trim().parse().unwrap_or(456789);
     let resp = reqwest::get("https://xkcd.com/info.0.json")
         .await?
         .text()
         .await?;
     let json: Value = serde_json::from_str(&resp)?;
+    // if num != 100000, do all of this
     let max_num: i32 = format!("{}", json["num"]).trim().parse().unwrap();
     if num > max_num {
-        let response = format!("that comic hasn't come out yet. the most recent one was {}.", max_num);
-        msg.reply(&ctx.http, &response).await?;
-        return Ok(())
+        if num == 456789 {
+            if args.rest() == "" {
+                print_xkcd(max_num, msg, ctx).await?;
+            } else if args.rest() == "random" {
+                let rand_num = thread_rng().gen_range(0..max_num);
+                print_xkcd(rand_num, msg, ctx).await?;
+            }
+        } else {
+            let response = format!("Please enter no arguments, 'random', or a number between 1 and {}.", max_num);
+            msg.reply(&ctx.http, &response).await?;
+            return Ok(())
+        }
     } else if num <= 0 {
         let response = format!("please enter a number between 1 and {}.", max_num);
         msg.reply(&ctx.http, &response).await?;
     } else {
-        let link = format!("https://xkcd.com/{}/info.0.json", num);
-        let comic = reqwest::get(link)
-            .await?
-            .text()
-            .await?;
-        let json: Value = serde_json::from_str(&comic)?;
-        let date = format!("{}-{}-{}", rjq(json["month"].to_string()), rjq(json["day"].to_string()), rjq(json["year"].to_string()));
-        let title = format!("xkcd {}: {} - {}", json["num"].to_string(), rjq(json["safe_title"].to_string()), &date);
-        let response = MessageBuilder::new()
-            .push_bold_safe(&title)
-            .build();
-        msg.reply(&ctx.http, &response).await?;
-        let image_link = format!("{}", rjq(json["img"].to_string()));
-        msg.channel_id.say(&ctx.http, &image_link).await?;
-        msg.channel_id.say(&ctx.http, rjq(json["alt"].to_string())).await?;
+        print_xkcd(num, msg, ctx).await?;
+        return Ok(())
     }
     Ok(())
 }
 
+// #[inline]
+async fn print_xkcd(num: i32, msg: &Message, ctx: &Context) -> CommandResult {
+    let link = format!("https://xkcd.com/{}/info.0.json", num);
+    let comic = reqwest::get(link)
+        .await?
+        .text()
+        .await?;
+    let json: Value = serde_json::from_str(&comic)?;
+    let title = format!("xkcd {}: {}", json["num"].to_string(), rjq(json["safe_title"].to_string()));
+    let date = format!("{}-{}-{}", rjq(json["month"].to_string()), rjq(json["day"].to_string()), rjq(json["year"].to_string()));
+    let image_link= rjq(json["img"].to_string());
+    let desc = rjq(json["alt"].to_string());
+    let _ = msg.channel_id.send_message(&ctx.http, |m| {
+                m.content(&title);
+                m.embed(|e| {
+                    // e.title(&title);
+                    e.description(&date);
+                    e.image("attachment://&image_link");
+                    e.footer(|f| {
+                        f.text(&desc);
+                        f
+                    });
+                    e
+                });
+                m.add_file(AttachmentType::Image(&image_link));
+                m
+            }).await;
+    Ok(())
+}
 #[inline]
 // remove json quotes
 fn rjq(s: String) -> String {
