@@ -6,13 +6,12 @@ use std::{
     fs::{File, OpenOptions},
     io::{prelude::*, BufRead, BufReader},
     time::{SystemTime, UNIX_EPOCH},
-    collections::HashMap,
 };
 
 use chrono::{prelude::*, Duration, Utc};
 use owoify_rs::{Owoifiable, OwoifyLevel};
 use rand::{thread_rng, Rng};
-use serde_json::{Result, Value};
+use serde_json::Value;
 
 use serenity::{
     async_trait,
