@@ -635,8 +635,8 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .push("^latency - see latency to bot host.\n")
                 .push("^sarcasm [^s, ^/s] - modify your message to bE lIkE tHiS.\n")
                 .push("^owo - modify your message to be owoified.\n")
-                .push("^daily - run this daily to maintain a streak. forgetting one day will result in a reset.")
-                .push("^xkcd - get xkcd comics. run with no arguments for the latest, 'random' for a random comic, or a number of the specific one you want.")
+                .push("^daily - run this daily to maintain a streak. forgetting one day will result in a reset.\n")
+                .push("^xkcd - get xkcd comics. run with no arguments for the latest, 'random' for a random comic, or a number of the specific one you want.\n")
                 .build();
             msg.reply(&ctx.http, &response).await?;
         }
