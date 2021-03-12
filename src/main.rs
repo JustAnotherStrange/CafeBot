@@ -1,11 +1,10 @@
 // TODO:
-#![allow(non_snake_case)] // because of CafeBot name of crate
+#![allow(non_snake_case)] // because of CafeBot crate name
 use std::{
     env,
     fs,
     fs::{File, OpenOptions},
     io::{prelude::*, BufRead, BufReader},
-    // collections::{HashMap, HashSet}, fmt::Write, sync::Arc
     sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -13,11 +12,10 @@ use std::{
 use chrono::{prelude::*, Duration, Utc};
 use owoify_rs::{Owoifiable, OwoifyLevel};
 use rand::{thread_rng, Rng};
-// use chrono_humanize::HumanTime;
 
 use serenity::{
     async_trait,
-    client::{bridge::gateway::ShardManager, Client, Context, EventHandler}, // ShardId
+    client::{Client, Context, EventHandler},
     framework::{
         standard::{
             macros::{command, group},
@@ -25,7 +23,6 @@ use serenity::{
         },
         StandardFramework,
     },
-    // http::Http,
     model::{
         channel::{Channel, Message},
         gateway::{Activity, Ready},
@@ -40,11 +37,6 @@ use serenity::{
 // A container type is created for inserting into the Client's `data`, which
 // allows for data to be accessible across all events and framework commands, or
 // anywhere else that has a copy of the `data` Arc.
-struct ShardManagerContainer;
-
-impl TypeMapKey for ShardManagerContainer {
-    type Value = Arc<Mutex<ShardManager>>;
-}
 
 struct Handler;
 
@@ -61,8 +53,7 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         // inform when connected
         println!("Connected as {}", ready.user.name);
-        let activity = Activity::playing("vid eo g ame s"); // other Activity::* - listening, competing, streaming
-        ctx.set_presence(Some(activity), OnlineStatus::Online).await; // set status to "Playing vid eo g ame s"
+        ctx.set_presence(Some(Activity::playing("vid eo g ame s")), OnlineStatus::Online).await; // set status to "Playing vid eo g ame s" - other Activity::* - listening, competing, streaming
     }
     async fn message(&self, ctx: Context, msg: Message) {
         // ----- subreddit detecting and linking by g_w1 -----
@@ -204,8 +195,9 @@ fn sarcastify(to_sarc: &str) -> String {
 
 #[command]
 #[only_in(guilds)]
+// owo command for text wike twis uwu
 async fn owo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    let mut response = args.rest().owoify(&OwoifyLevel::Uwu);
+    let mut response = args.rest().owoify(&OwoifyLevel::Uwu); // use owoify-rs crate
     response.insert_str(0, "@: ");
     response.insert_str(1, &msg.author.name);
     modify(ctx, msg, &response).await?;
@@ -216,13 +208,14 @@ async fn owo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 #[only_in(guilds)]
 async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
     if !(std::path::Path::new("daily").exists()) {
-        fs::create_dir("daily").unwrap();
+        fs::create_dir("daily").unwrap(); // if folder "daily" doesn't exist, create it.
     }
-    let filename = format!("daily/{}", msg.author);
+    // create unique file for each user based on User ID in the "daily" directory
+    let filename = format!("daily/{}", msg.author); 
     let mut new = false;
     if !(std::path::Path::new(&filename).exists()) {
-        fs::File::create(&filename)?;
-        new = true;
+        fs::File::create(&filename)?; // if a file with the filename of the ID of the author doesn't exist, create it.
+        new = true; // set this for an if statement later (fixes a bug)
     }
     let mut file = OpenOptions::new()
         .read(true)
@@ -230,35 +223,38 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
         .append(true)
         .open(&filename)
         .expect("failed to open daily file");
-    let date_string = format!("{}", Local::now());
-    let date_parsed = format!("{}", &date_string[0..10]);
+    let mut date_string = format!("{}", Local::now());
+    date_string = format!("{}", &date_string[0..10]); // take only the first 10 characters of local time, which contain just the date
     let day = Duration::hours(24);
-    let yesterday_string = format!("{}", Local::now() - day);
-    let yesterday_parsed = format!("{}", &yesterday_string[0..10]);
-    let line_thing = get_content_of_last_line(&filename);
+    let mut yesterday_string = format!("{}", Local::now() - day);
+    yesterday_string = format!("{}", &yesterday_string[0..10]); // calculate yesterday's date similarly
+    let line_thing = get_content_of_last_line(&filename); // this function returns a tuple. String for content of last line, and usize for total amount of lines. 
     let content_of_last_line = line_thing.0;
     let amount_of_lines = line_thing.1;
-    // let date_line = format!("{}\n", date_parsed);
-    if new {
-        let content_to_log = format!("{}\n", date_parsed);
+    if new { // if the file has just been created, allow the Day 1 (previously it would say "last line != yesterdays date, so fail"
+        let content_to_log = format!("{}\n", date_string); // add newline to date_string
         file.write_all(content_to_log.as_bytes())
             .expect("failed to write content to log file");
-        let response = format!("Daily complete! This is day {:?}.", amount_of_lines);
+        let response = MessageBuilder::new()
+            .push("Daily complete! This is day ")
+            .push_bold_safe(amount_of_lines)
+            .push(".")
+            .build();
         msg.reply(&ctx.http, &response).await?;
     } else {
-        if content_of_last_line != date_parsed {
-            if content_of_last_line == yesterday_parsed {
-                let content_to_log = format!("{}\n", date_parsed);
+        if content_of_last_line != date_string { // if previous is not today
+            if content_of_last_line == yesterday_string { // if previous was yesterday
+                let content_to_log = format!("{}\n", date_string);
                 file.write_all(content_to_log.as_bytes())
                     .expect("failed to write content to log file");
                 let response = format!("Daily complete! This is day {:?}.", amount_of_lines);
                 msg.reply(&ctx.http, &response).await?;
-            } else {
+            } else { // if previous not yesterday, lose streak
                 msg.reply(&ctx.http, "Streak lost! Run ^daily again to start fresh.")
                     .await?;
                 fs::remove_file(&filename).unwrap();
             }
-        } else {
+        } else { // if previous was today
             msg.reply(
                 &ctx.http,
                 "Sorry, you have already done your daily for today.",
@@ -269,6 +265,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
+#[inline]
 fn get_content_of_last_line(filename: &String) -> (String, usize) {
     let file = OpenOptions::new()
         .read(true)
@@ -279,17 +276,17 @@ fn get_content_of_last_line(filename: &String) -> (String, usize) {
     let reader = BufReader::new(file);
     let mut content_of_last_line = String::new();
     let mut amount_of_lines = 0;
-    for (i, line) in reader.lines().enumerate() {
+    for (i, line) in reader.lines().enumerate() { // read line by line using BufReader
         amount_of_lines = i;
         content_of_last_line = line.unwrap();
     }
-    amount_of_lines += 1;
+    amount_of_lines += 1; // human readable lines (starts at 1, not 0) 
     return (content_of_last_line, amount_of_lines);
 }
 
 #[command]
 #[only_in(guilds)]
-// ping pong command
+// ping pong command (used mostly for checking if bot is online)
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply(&ctx.http, "pong").await?;
     Ok(())
