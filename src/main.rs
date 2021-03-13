@@ -167,6 +167,7 @@ async fn modify(ctx: &Context, msg: &Message, to_send: &str) -> CommandResult {
     }
     Ok(())
 }
+
 #[command]
 #[aliases("s", "/s")]
 // sarcasm command for tExT lIkE tHiS. By g_w1
@@ -235,7 +236,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
         // if the file has just been created, allow the Day 1 (previously it would say "last line != yesterdays date, so fail"
         let content_to_log = format!("{}\n", date_string); // add newline to date_string
         file.write_all(content_to_log.as_bytes())
-            .expect("failed to write content to log file");
+            .expect("failed to write content to daily file");
         msg.reply(&ctx.http, "Daily complete! This is day 0.").await?;
     } else {
         if content_of_last_line != date_string {
@@ -244,18 +245,18 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
                 // if previous was yesterday
                 let content_to_log = format!("{}\n", date_string);
                 file.write_all(content_to_log.as_bytes())
-                    .expect("failed to write content to log file");
+                    .expect("failed to write content to daily file");
                 let response = format!("Daily complete! This is day {:?}.", amount_of_lines + 1);
                 msg.reply(&ctx.http, &response).await?;
             } else {
                 // if previous not yesterday, lose streak
-                msg.reply(&ctx.http, "Streak lost! Run ^daily again to start fresh.")
+                let response = format!("Streak lost! Your streak was {}. Run ^daily again to start again.", amount_of_lines);
+                msg.reply(&ctx.http, &response)
                     .await?;
                 fs::remove_file(&filename).unwrap();
             }
         } else {
             // if previous was today
-            let amount_of_lines = get_content_of_last_line(&filename).1; // this function returns a tuple. String for content of last line, and usize for total amount of lines.
             let response = format!("Sorry, you have already done your daily for today. Your current streak is {}.", amount_of_lines);
             msg.reply(
                 &ctx.http,
@@ -288,7 +289,6 @@ fn get_content_of_last_line(filename: &String) -> (String, usize) {
 }
 
 #[command]
-// TODO:
 async fn xkcd(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let num = args.single::<u32>().unwrap_or(456789); // take the first argument and try to convert to u32. if fail, set to 456789 (for later)
     // make https request with reqwest to find the number of most recent comic
@@ -297,7 +297,7 @@ async fn xkcd(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         .text()
         .await?;
     let json: Value = serde_json::from_str(&resp)?; // json deserialize
-    let max_num: u32 = format!("{}", json["num"]).trim().parse().unwrap(); // format the max num into i32
+    let max_num: u32 = format!("{}", json["num"]).trim().parse().unwrap(); // format the max num into u32
     args.rewind();
     if num > max_num || num == 0 {
         // if the number is too high. this will also trigger when it becomes 456789 after failing to parse into u32
@@ -497,6 +497,7 @@ async fn bruh(ctx: &Context, msg: &Message) -> CommandResult {
     .await?;
     Ok(())
 }
+
 #[command]
 // works but prints it as: -PT0.313701128S (this probably means 313ms)
 async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
