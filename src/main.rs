@@ -236,12 +236,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
         let content_to_log = format!("{}\n", date_string); // add newline to date_string
         file.write_all(content_to_log.as_bytes())
             .expect("failed to write content to log file");
-        let response = MessageBuilder::new()
-            .push("Daily complete! This is day ")
-            .push_bold_safe(amount_of_lines)
-            .push(".")
-            .build();
-        msg.reply(&ctx.http, &response).await?;
+        msg.reply(&ctx.http, "Daily complete! This is day 0.").await?;
     } else {
         if content_of_last_line != date_string {
             // if previous is not today
@@ -260,9 +255,11 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
             }
         } else {
             // if previous was today
+            let amount_of_lines = get_content_of_last_line(&filename).1; // this function returns a tuple. String for content of last line, and usize for total amount of lines.
+            let response = format!("Sorry, you have already done your daily for today. Your current streak is {}.", amount_of_lines);
             msg.reply(
                 &ctx.http,
-                "Sorry, you have already done your daily for today.",
+                &response
             )
             .await?;
         }
