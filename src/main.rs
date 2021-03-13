@@ -301,7 +301,8 @@ async fn xkcd(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         .await?;
     let json: Value = serde_json::from_str(&resp)?; // json deserialize
     let max_num: u32 = format!("{}", json["num"]).trim().parse().unwrap(); // format the max num into i32
-    if num > max_num {
+    args.rewind();
+    if num > max_num || num == 0 {
         // if the number is too high. this will also trigger when it becomes 456789 after failing to parse into u32
         if args.rest() == "" {
             // if no arguments, send latest comic
