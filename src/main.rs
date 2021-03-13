@@ -245,7 +245,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
                 let content_to_log = format!("{}\n", date_string);
                 file.write_all(content_to_log.as_bytes())
                     .expect("failed to write content to log file");
-                let response = format!("Daily complete! This is day {:?}.", amount_of_lines);
+                let response = format!("Daily complete! This is day {:?}.", amount_of_lines + 1);
                 msg.reply(&ctx.http, &response).await?;
             } else {
                 // if previous not yesterday, lose streak
