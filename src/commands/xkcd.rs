@@ -1,15 +1,11 @@
-use serenity::{
-    prelude::*,
-    model::prelude::*,
-    framework::standard::{
-        CommandResult,
-        macros::command,
-        Args,
-    },
-    http::AttachmentType,
-};
-use serde_json::Value;
 use rand::{thread_rng, Rng};
+use serde_json::Value;
+use serenity::{
+    framework::standard::{macros::command, Args, CommandResult},
+    http::AttachmentType,
+    model::prelude::*,
+    prelude::*,
+};
 
 #[command]
 async fn xkcd(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {

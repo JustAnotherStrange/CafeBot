@@ -1,11 +1,7 @@
 use serenity::{
-    prelude::*,
+    framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
-    framework::standard::{
-        CommandResult,
-        macros::command,
-        Args,
-    },
+    prelude::*,
     utils::MessageBuilder,
 };
 

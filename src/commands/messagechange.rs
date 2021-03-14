@@ -1,18 +1,14 @@
-use std::{
-    fs::{File, OpenOptions},
-    time::{SystemTime, UNIX_EPOCH},
-    io::prelude::*,
-};
 use owoify_rs::{Owoifiable, OwoifyLevel};
 use serenity::{
-    prelude::*,
+    framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
-    framework::standard::{
-        CommandResult,
-        macros::command,
-        Args,
-    },
+    prelude::*,
     utils::{content_safe, ContentSafeOptions, MessageBuilder},
+};
+use std::{
+    fs::{File, OpenOptions},
+    io::prelude::*,
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 #[inline]
@@ -73,7 +69,6 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .expect("failed to write content to log file");
     Ok(())
 }
-
 
 #[command]
 #[aliases("s", "/s")]

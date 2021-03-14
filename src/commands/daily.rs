@@ -1,16 +1,13 @@
+use chrono::{prelude::*, Duration};
+use serenity::{
+    framework::standard::{macros::command, CommandResult},
+    model::prelude::*,
+    prelude::*,
+};
 use std::{
     fs,
     fs::OpenOptions,
     io::{prelude::*, BufRead, BufReader},
-};
-use chrono::{prelude::*, Duration};
-use serenity::{
-    prelude::*,
-    model::prelude::*,
-    framework::standard::{
-        CommandResult,
-        macros::command,
-    },
 };
 
 #[command]

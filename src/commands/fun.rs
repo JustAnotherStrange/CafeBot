@@ -1,17 +1,13 @@
+use serenity::{
+    framework::standard::{macros::command, Args, CommandResult},
+    model::prelude::*,
+    prelude::*,
+    utils::MessageBuilder,
+};
 use std::{
     fs,
     fs::File,
     io::{BufRead, BufReader},
-};
-use serenity::{
-    prelude::*,
-    model::prelude::*,
-    framework::standard::{
-        CommandResult,
-        macros::command,
-        Args,
-    },
-    utils::MessageBuilder,
 };
 
 use rand::{thread_rng, Rng};

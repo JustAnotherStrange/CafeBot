@@ -1,32 +1,19 @@
 #![allow(non_snake_case)] // because of CafeBot crate name
 mod commands;
 
-use std::env;
 use serenity::{
     async_trait,
     client::{Client, Context, EventHandler},
-    framework::{
-        standard::{
-            macros::group,
-        },
-        StandardFramework,
-    },
+    framework::{standard::macros::group, StandardFramework},
     model::{
         channel::Message,
         gateway::{Activity, Ready},
         user::OnlineStatus,
     },
 };
+use std::env;
 
-use commands::{
-    fun::*,
-    xkcd::*,
-    messagechange::*,
-    daily::*,
-    debug::*,
-    admin::*,
-    help::*,
-};
+use commands::{admin::*, daily::*, debug::*, fun::*, help::*, messagechange::*, xkcd::*};
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
 // A container type is created for inserting into the Client's `data`, which

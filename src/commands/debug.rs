@@ -1,12 +1,9 @@
-use serenity::{
-    prelude::*,
-    model::prelude::*,
-    framework::standard::{
-        CommandResult,
-        macros::command,
-    },
-};
 use chrono::Utc;
+use serenity::{
+    framework::standard::{macros::command, CommandResult},
+    model::prelude::*,
+    prelude::*,
+};
 #[command]
 // ping pong command (used mostly for checking if bot is online)
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
