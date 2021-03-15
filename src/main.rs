@@ -11,7 +11,6 @@ use serenity::{
         user::OnlineStatus,
     },
 };
-use std::env;
 
 use commands::{admin::*, daily::*, debug::*, fun::*, help::*, messagechange::*, xkcd::*};
 
@@ -58,11 +57,11 @@ impl EventHandler for Handler {
                         }
                         sub_reddit.push(c);
                     }
-                    if let Err(oof) = msg
+                    if let Err(e) = msg
                         .reply(&ctx.http, format!("<https://reddit.com/r/{}>", sub_reddit))
                         .await
                     {
-                        println!("oofed: {}", oof);
+                        println!("error: {}", e);
                     }
                 }
             }
@@ -74,7 +73,7 @@ impl EventHandler for Handler {
 #[tokio::main]
 async fn main() {
     // Take token from the env var DISCORD_TOKEN
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token = std::env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     let framework = StandardFramework::new()
         .configure(|c| {
             c // configure command framework with the prefix "^" and allow whitespaces (e.g. `^ ping")

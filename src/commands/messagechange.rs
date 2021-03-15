@@ -3,7 +3,7 @@ use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
     prelude::*,
-    utils::{content_safe, ContentSafeOptions, MessageBuilder},
+    utils::{content_safe, ContentSafeOptions},
 };
 use std::{
     fs::{File, OpenOptions},
@@ -14,6 +14,8 @@ use std::{
 #[inline]
 async fn modify(ctx: &Context, msg: &Message, to_send: &str) -> CommandResult {
     let d = msg.delete(&ctx.http);
+    // following match statement makes it so the new message will reply to the same message that
+    // the one being deleted replied to, but only if it replied to a message.
     match &msg.referenced_message {
         Some(m) => {
             let m = m.reply(&ctx.http, &to_send);
@@ -54,17 +56,13 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let unixtime = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards");
-    let content_to_log = MessageBuilder::new()
-        .push("at ")
-        .push(unixtime.as_secs())
-        .push(": ")
-        .push(content)
-        .push(" written by ")
-        .push(&msg.author.name)
-        .push(" using the say command in the channel ")
-        .push(msg.channel_id)
-        .push("\n")
-        .build();
+    let content_to_log = format!(
+        "at {}: {} written by {} using the say command in the channel {}\n",
+        unixtime.as_secs(),
+        content,
+        &msg.author.name,
+        msg.channel_id
+    );
     file.write_all(content_to_log.as_bytes())
         .expect("failed to write content to log file");
     Ok(())
