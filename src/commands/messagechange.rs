@@ -11,7 +11,6 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-#[inline]
 async fn modify(ctx: &Context, msg: &Message, to_send: &str) -> CommandResult {
     let d = msg.delete(&ctx.http);
     // following match statement makes it so the new message will reply to the same message that
