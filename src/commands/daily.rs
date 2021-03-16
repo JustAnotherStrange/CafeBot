@@ -30,16 +30,15 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
         .expect("failed to open daily file");
     let mut date_string = format!("{}", Local::now());
     date_string = format!("{}", &date_string[0..10]); // take only the first 10 characters of local time, which contain just the date
-    let day = Duration::hours(24);
-    let mut yesterday_string = format!("{}", Local::now() - day);
+    let mut yesterday_string = format!("{}", Local::now() - Duration::hours(24));
     yesterday_string = format!("{}", &yesterday_string[0..10]); // calculate yesterday's date similarly
-    let line_thing = get_content_of_last_line(&filename); // this function returns a tuple. String for content of last line, and usize for total amount of lines.
-    let content_of_last_line = line_thing.0;
-    let amount_of_lines = line_thing.1;
+    let line_fn = get_content_of_last_line(&filename); // this function returns a tuple. String for content of last line, and usize for total amount of lines.
+    let content_of_last_line = line_fn.0;
+    let amount_of_lines = line_fn.1;
     if new {
         // if the file has just been created, allow the Day 1 (previously it would say "last line != yesterdays date, so fail"
-        let content_to_log = format!("{}\n", date_string); // add newline to date_string
-        file.write_all(content_to_log.as_bytes())
+        let content_to_write = format!("{}\n", date_string); // add newline to date_string
+        file.write_all(content_to_write.as_bytes())
             .expect("failed to write content to daily file");
         msg.reply(&ctx.http, "Daily complete! This is day 0.")
             .await?;
@@ -48,8 +47,8 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
             // if previous is not today
             if content_of_last_line == yesterday_string {
                 // if previous was yesterday
-                let content_to_log = format!("{}\n", date_string);
-                file.write_all(content_to_log.as_bytes())
+                let content_to_write = format!("{}\n", date_string);
+                file.write_all(content_to_write.as_bytes())
                     .expect("failed to write content to daily file");
                 let response = format!("Daily complete! This is day {:?}.", amount_of_lines + 1);
                 msg.reply(&ctx.http, &response).await?;
@@ -76,12 +75,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[inline]
 fn get_content_of_last_line(filename: &String) -> (String, usize) {
-    let file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .append(true)
-        .open(&filename)
-        .expect("failed to open daily file.");
+    let file = fs::File::open(&filename).expect("failed to open daily file");
     let reader = BufReader::new(file);
     let mut content_of_last_line = String::new();
     let mut amount_of_lines = 0;

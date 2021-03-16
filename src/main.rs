@@ -24,8 +24,22 @@ struct Handler;
 #[group]
 // List of commands
 #[commands(
-    say, ping, count, hair, help, zote, sarcasm, latency, bruh, status, slow_mode, admin_test, owo,
-    daily, xkcd
+    say,
+    ping,
+    count,
+    hair,
+    help,
+    zote,
+    sarcasm,
+    latency,
+    bruh,
+    status,
+    slow_mode,
+    admin_test,
+    owo,
+    daily,
+    xkcd,
+    rockpaperscissors
 )]
 
 struct General;
@@ -73,7 +87,8 @@ impl EventHandler for Handler {
 #[tokio::main]
 async fn main() {
     // Take token from the env var DISCORD_TOKEN
-    let token = std::env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token = std::env::var("DISCORD_TOKEN")
+        .expect("Expected a token from the environment variable DISCORD_TOKEN");
     let framework = StandardFramework::new()
         .configure(|c| {
             c // configure command framework with the prefix "^" and allow whitespaces (e.g. `^ ping")
@@ -86,7 +101,6 @@ async fn main() {
         .framework(framework)
         .await
         .expect("Err creating client");
-
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }
