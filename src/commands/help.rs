@@ -27,7 +27,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .push("^owo - modify your message to be owoified.\n")
                 .push("^daily - run this daily to maintain a streak. forgetting one day will result in a reset.\n")
                 .push("^xkcd - get xkcd comics. run with no arguments for the latest, 'random' for a random comic, or a number of the specific one you want.\n")
-                .push("^rockpaperscissors [^)ps] - play rock paper scissors! Example: ^rps rock\n")
+                .push("^rockpaperscissors [^rps] - play rock paper scissors! Example: ^rps rock\n")
                 .build();
             msg.reply(&ctx.http, &response).await?;
         }
