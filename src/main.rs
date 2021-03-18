@@ -39,7 +39,8 @@ struct Handler;
     owo,
     daily,
     xkcd,
-    rockpaperscissors
+    rockpaperscissors,
+    game
 )]
 
 struct General;
