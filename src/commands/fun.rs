@@ -50,26 +50,28 @@ async fn zote(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         // which will trigger the "please enter a number" message.
         args_string.parse().unwrap_or(100)
     };
-    if args_string == "all" {
-        // print all precepts
-        let filename = "zote";
-        let file = File::open(filename).expect("failed to open file");
-        let reader = BufReader::new(file);
-        for line in reader.lines() {
-            let line = line.unwrap();
-            // Say the line along with a zote emoji from CyberCafe.
-            let response = MessageBuilder::new()
-                .push("<:zote:809592148805681193> ")
-                .push(&line)
-                .build();
-            msg.channel_id.say(&ctx.http, &response).await?;
-        }
-    } else if args_string == "bald" {
+    // // ^zote all was removed due to being a recipe for spamming. 
+    // if args_string == "all" {
+    //     // print all precepts
+    //     let filename = "zote";
+    //     let file = File::open(filename).expect("failed to open file");
+    //     let reader = BufReader::new(file);
+    //     for line in reader.lines() {
+    //         let line = line.unwrap();
+    //         // Say the line along with a zote emoji from CyberCafe.
+    //         let response = MessageBuilder::new()
+    //             .push("<:zote:809592148805681193> ")
+    //             .push(&line)
+    //             .build();
+    //         msg.channel_id.say(&ctx.http, &response).await?;
+    //     }
+    // } else if args_string == "bald" {
+    if args_string == "bald" {
         msg.reply(&ctx.http, "<:zote:809592148805681193> Precept Bald: 'Never Be Bald'. A head without hair will make you weaker in battle. You must avoid this at all costs by growing hair.").await?;
     } else if zote_line > 57 {
         msg.reply(
             &ctx.http,
-            "Please select a number from 1 to 57, or 'random', 'all', or 'bald'.",
+            "Please select a number from 1 to 57, or 'random', or 'bald'.",
         )
         .await?; // because there are only 57 precepts
     } else {
