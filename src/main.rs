@@ -12,7 +12,10 @@ use serenity::{
     },
 };
 
-use commands::{admin::*, daily::*, debug::*, fun::*, help::*, messagechange::*, xkcd::*};
+use commands::{
+    admin::*, bruh::*, count::*, daily::*, latency::*, game::*, hair::*, help::*, owo::*,
+    rps::*, sarcasm::*, say::*, xkcd::*, zote::*, ping::*, latency::*
+};
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
 // A container type is created for inserting into the Client's `data`, which
@@ -24,6 +27,7 @@ struct Handler;
 #[group]
 // List of commands
 #[commands(
+    latency,
     say,
     ping,
     count,
@@ -31,7 +35,6 @@ struct Handler;
     help,
     zote,
     sarcasm,
-    latency,
     bruh,
     status,
     slow_mode,

@@ -1,7 +1,16 @@
-pub mod admin; // admin_test, status, slow_mode
+pub mod admin;
+pub mod bruh;
+pub mod count;
 pub mod daily;
-pub mod debug; // ping, latency
-pub mod fun; // count, zote, hair/bald, bruh
+pub mod latency;
+pub mod game;
+pub mod hair;
 pub mod help;
-pub mod messagechange; // say, sarcasm, owo
+pub mod modify;
+pub mod owo;
+pub mod ping;
+pub mod rps;
+pub mod sarcasm;
+pub mod say;
 pub mod xkcd;
+pub mod zote;
