@@ -12,6 +12,7 @@ use serenity::{
     },
 };
 
+// warning here for unused import... but the latency command works, and its code is in latency.rs. IDK
 use commands::{
     admin::*, bruh::*, count::*, daily::*, latency::*, game::*, hair::*, help::*, owo::*,
     rps::*, sarcasm::*, say::*, xkcd::*, zote::*, ping::*, latency::*
