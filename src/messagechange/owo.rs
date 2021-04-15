@@ -7,7 +7,7 @@ use serenity::{
     model::channel::Message,
 };
 
-use crate::commands::messagechange::modify;
+use crate::messagechange::modify;
 
 #[command]
 async fn owo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {

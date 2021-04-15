@@ -13,14 +13,15 @@ use serenity::{
     },
 };
 
-use commands::{
-    admin::{admin_test::*, slow_mode::*, status::*},
-    fun::{bruh::*, count::*, daily::*, game::*, hair::*, rps::*, xkcd::*, zote::*},
-    messagechange::{owo::*, sarcasm::*, say::*},
-    tools::{help::*, latency::*, ping::*},
-};
+use admin::{admin_test::*, slow_mode::*, status::*};
+use fun::{bruh::*, count::*, daily::*, game::*, hair::*, rps::*, xkcd::*, zote::*};
+use messagechange::{owo::*, sarcasm::*, say::*};
+use tools::{help::*, latency::*, ping::*};
 
-mod commands;
+mod admin;
+mod fun;
+mod messagechange;
+mod tools;
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
 // A container type is created for inserting into the Client's `data`, which
