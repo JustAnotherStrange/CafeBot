@@ -5,10 +5,10 @@ authors = ["justanotherstrange"]
 edition = "2018"
 
 [dependencies]
-serenity = { version = "0.10.2", default-features = true, features = ["framework", "standard_framework", "http", "client", "gateway", "rustls_backend", "model"] }
-tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+serenity = { version = "0.10.5", default-features = true, features = ["framework", "standard_framework", "http", "client", "gateway", "rustls_backend", "model"] }
+tokio = { version = "1.5.0", features = ["macros", "rt-multi-thread"] }
 rand = "0.8.3"
-chrono = "0.4"
-owoify_rs = "0.1.5"
-reqwest = "0.11.2"
+chrono = "0.4.19"
+owoify_rs = "0.2.0"
+reqwest = "0.11.3"
 serde_json = "1.0.64"
