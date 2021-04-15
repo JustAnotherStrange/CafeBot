@@ -3,7 +3,6 @@ use serenity::{
     framework::standard::{Args, CommandResult, macros::command},
     model::prelude::*,
     prelude::*,
-    utils::MessageBuilder,
 };
 
 #[command]
