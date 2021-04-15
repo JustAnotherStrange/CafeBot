@@ -1,5 +1,5 @@
-#![allow(non_snake_case)] // because of CafeBot crate name
-mod commands;
+// because of CafeBot crate name
+#![allow(non_snake_case)]
 
 use serenity::{
     async_trait,
@@ -14,10 +14,22 @@ use serenity::{
 
 // warning here for unused import... but the latency command works, and its code is in latency.rs. IDK
 use commands::{
-    admin_test::*, bruh::*, count::*, daily::*, game::*, hair::*, help::*, latency::*, latency::*,
-    owo::*, ping::*, rps::*, sarcasm::*, say::*, slow_mode::*, slow_mode::*, status::*, xkcd::*,
+    admin::{
+        admin_test::*, slow_mode::*, status::*
+    },
+    count::*, daily::*,
+    fun::{
+        bruh::*, game::*, hair::*, rps::*
+    },
+    messagechange::{
+        owo::*, sarcasm::*, say::*
+    },
+    help::*, latency::*,
+    ping::*, xkcd::*,
     zote::*,
 };
+
+mod commands;
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
 // A container type is created for inserting into the Client's `data`, which
