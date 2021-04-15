@@ -1,4 +1,4 @@
-// run daily and try to keep up a streak.
+// run daily to try to keep up a streak.
 use chrono::{prelude::*, Duration};
 use serenity::{
     framework::standard::{macros::command, CommandResult},
@@ -74,7 +74,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
-#[inline]
+// returns the number of the last line and its content.
 fn get_content_of_last_line(filename: &String) -> (String, usize) {
     let file = fs::File::open(&filename).expect("failed to open daily file");
     let reader = BufReader::new(file);

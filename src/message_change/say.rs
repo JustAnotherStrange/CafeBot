@@ -12,7 +12,7 @@ use serenity::{
     utils::{content_safe, ContentSafeOptions},
 };
 
-use crate::messagechange::modify;
+use crate::message_change::modify;
 
 #[command]
 async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {

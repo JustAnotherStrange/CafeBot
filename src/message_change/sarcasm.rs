@@ -5,7 +5,7 @@ use serenity::{
     model::channel::Message,
 };
 
-use crate::messagechange::modify;
+use crate::message_change::modify;
 
 #[command]
 #[aliases("s", "/s")]

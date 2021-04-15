@@ -15,12 +15,12 @@ use serenity::{
 
 use admin::{admin_test::*, slow_mode::*, status::*};
 use fun::{bruh::*, count::*, daily::*, game::*, hair::*, rps::*, xkcd::*, zote::*};
-use messagechange::{owo::*, sarcasm::*, say::*};
+use message_change::{owo::*, sarcasm::*, say::*};
 use tools::{help::*, latency::*, ping::*};
 
 mod admin;
 mod fun;
-mod messagechange;
+mod message_change;
 mod tools;
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
