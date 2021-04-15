@@ -1,56 +1,11 @@
 // is there a way to make it so every command in this file only usable by admin perms?
 use serenity::{
-    framework::standard::{macros::command, Args, CommandResult},
+    framework::standard::{Args, CommandResult, macros::command},
     model::prelude::*,
     prelude::*,
     utils::MessageBuilder,
 };
 
-#[command]
-async fn status(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    if let Some(member) = &msg.member {
-        for role in &member.roles {
-            if role
-                .to_role_cached(&ctx.cache)
-                .await
-                .map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR))
-            {
-                let name = args.message();
-                ctx.set_activity(Activity::playing(&name)).await;
-                let response = MessageBuilder::new()
-                    .push("Status has been set to ")
-                    .push_bold_safe("Playing")
-                    .push(" ")
-                    .push_bold_safe(&name)
-                    .build();
-                msg.reply(&ctx.http, &response).await?;
-                return Ok(());
-            }
-        }
-    }
-    msg.reply(&ctx.http, "You can't run that command.").await?;
-    Ok(())
-}
-
-// https://github.com/serenity-rs/serenity/blob/dcc1ac4d0a12f24e998af3949e33ec352153a6af/examples/e05_command_framework/src/main.rs#L522
-#[command]
-#[only_in(guilds)]
-async fn admin_test(ctx: &Context, msg: &Message) -> CommandResult {
-    if let Some(member) = &msg.member {
-        for role in &member.roles {
-            if role
-                .to_role_cached(&ctx.cache)
-                .await
-                .map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR))
-            {
-                msg.reply(&ctx.http, "You are an admin.").await?;
-                return Ok(());
-            }
-        }
-    }
-    msg.reply(&ctx.http, "You are not an admin.").await?;
-    Ok(())
-}
 #[command]
 #[only_in(guilds)]
 // Only people with administrator permissions can run

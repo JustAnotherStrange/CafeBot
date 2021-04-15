@@ -1,4 +1,4 @@
-pub mod admin;
+pub mod slow_mode;
 pub mod bruh;
 pub mod count;
 pub mod daily;
@@ -14,3 +14,5 @@ pub mod sarcasm;
 pub mod say;
 pub mod xkcd;
 pub mod zote;
+pub mod status;
+pub mod admin_test;

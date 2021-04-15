@@ -14,8 +14,9 @@ use serenity::{
 
 // warning here for unused import... but the latency command works, and its code is in latency.rs. IDK
 use commands::{
-    admin::*, bruh::*, count::*, daily::*, latency::*, game::*, hair::*, help::*, owo::*,
-    rps::*, sarcasm::*, say::*, xkcd::*, zote::*, ping::*, latency::*
+    admin_test::*, bruh::*, count::*, daily::*, game::*, hair::*, help::*, latency::*, latency::*,
+    owo::*, ping::*, rps::*, sarcasm::*, say::*, slow_mode::*, slow_mode::*, status::*, xkcd::*,
+    zote::*,
 };
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
