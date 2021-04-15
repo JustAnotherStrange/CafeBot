@@ -1,6 +1,6 @@
 // is there a way to make it so every command in this file only usable by admin perms?
 use serenity::{
-    framework::standard::{Args, CommandResult, macros::command},
+    framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
     prelude::*,
 };

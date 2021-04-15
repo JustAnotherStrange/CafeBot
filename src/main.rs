@@ -12,21 +12,11 @@ use serenity::{
     },
 };
 
-// warning here for unused import... but the latency command works, and its code is in latency.rs. IDK
 use commands::{
-    admin::{
-        admin_test::*, slow_mode::*, status::*
-    },
-    count::*, daily::*,
-    fun::{
-        bruh::*, game::*, hair::*, rps::*
-    },
-    messagechange::{
-        owo::*, sarcasm::*, say::*
-    },
-    help::*, latency::*,
-    ping::*, xkcd::*,
-    zote::*,
+    admin::{admin_test::*, slow_mode::*, status::*},
+    fun::{bruh::*, count::*, daily::*, game::*, hair::*, rps::*, xkcd::*, zote::*},
+    messagechange::{owo::*, sarcasm::*, say::*},
+    tools::{help::*, latency::*, ping::*},
 };
 
 mod commands;

@@ -1,11 +1,4 @@
-pub mod count;
-pub mod daily;
-pub mod latency;
-pub mod help;
-pub mod modify;
-pub mod ping;
-pub mod xkcd;
-pub mod zote;
 pub mod admin;
 pub mod fun;
 pub mod messagechange;
+pub mod tools;

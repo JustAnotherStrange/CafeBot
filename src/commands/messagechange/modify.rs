@@ -1,8 +1,4 @@
-use serenity::{
-    framework::standard::CommandResult,
-    model::prelude::*,
-    prelude::*,
-};
+use serenity::{framework::standard::CommandResult, model::prelude::*, prelude::*};
 
 pub(crate) async fn modify(ctx: &Context, msg: &Message, to_send: &str) -> CommandResult {
     let d = msg.delete(&ctx.http);
