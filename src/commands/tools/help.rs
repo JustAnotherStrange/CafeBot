@@ -1,3 +1,5 @@
+// Simple help command.
+// I tried to make it use embeds but it was a hassle and didn't work after a lot of debugging.
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
@@ -6,8 +8,6 @@ use serenity::{
 };
 
 #[command]
-// Simple help command.
-// I tried to make it use embeds but it was a hassle and didn't work after a lot of debugging.
 async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // build the message
     match args.rest() {

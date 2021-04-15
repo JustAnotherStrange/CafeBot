@@ -1,3 +1,4 @@
+// rock paper scissors game
 use rand::{thread_rng, Rng};
 use serenity::{
     client::Context,

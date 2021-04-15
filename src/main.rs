@@ -1,5 +1,6 @@
-// because of CafeBot crate name
-#![allow(non_snake_case)]
+// CafeBot: A discord bot for my small server.
+
+#![allow(non_snake_case)] // because of CafeBot crate name
 
 use serenity::{
     async_trait,

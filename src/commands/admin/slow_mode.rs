@@ -1,4 +1,4 @@
-// is there a way to make it so every command in this file only usable by admin perms?
+// sets slow mode
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,

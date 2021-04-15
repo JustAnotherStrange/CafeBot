@@ -1,3 +1,4 @@
+// shared function for modifying messages
 use serenity::{framework::standard::CommandResult, model::prelude::*, prelude::*};
 
 pub(crate) async fn modify(ctx: &Context, msg: &Message, to_send: &str) -> CommandResult {

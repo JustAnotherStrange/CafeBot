@@ -1,3 +1,4 @@
+// see latency from host to discord api
 use chrono::Utc;
 use serenity::{
     framework::standard::{macros::command, CommandResult},

@@ -1,3 +1,4 @@
+// get xkcd comics. prints with title, image, description, and alt text
 use rand::{thread_rng, Rng};
 use serde_json::Value;
 use serenity::{

@@ -1,3 +1,4 @@
+// prints a random bruh emote
 use rand::{thread_rng, Rng};
 use serenity::{
     client::Context,

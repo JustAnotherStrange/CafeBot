@@ -1,3 +1,4 @@
+// run daily and try to keep up a streak.
 use chrono::{prelude::*, Duration};
 use serenity::{
     framework::standard::{macros::command, CommandResult},

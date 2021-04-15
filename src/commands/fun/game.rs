@@ -1,3 +1,4 @@
+// when you lose the game. prints a random message from a list
 use rand::{thread_rng, Rng};
 use serenity::{
     framework::standard::{macros::command, CommandResult},
