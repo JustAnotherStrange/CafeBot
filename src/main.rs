@@ -14,7 +14,7 @@ use serenity::{
 };
 
 use admin::{admin_test::*, slow_mode::*, status::*};
-use fun::{bruh::*, count::*, daily::*, game::*, hair::*, rps::*, xkcd::*, zote::*};
+use fun::{bruh::*, count::*, daily::*, game::*, hair::*, rps::*, wiki::*, xkcd::*, zote::*};
 use message_change::{owo::*, sarcasm::*, say::*};
 use tools::{help::*, latency::*, ping::*};
 
@@ -49,7 +49,8 @@ struct Handler;
     daily,
     xkcd,
     rockpaperscissors,
-    game
+    game,
+    wiki
 )]
 
 struct General;

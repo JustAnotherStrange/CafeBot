@@ -86,9 +86,8 @@ async fn print_xkcd(num: u32, msg: &Message, ctx: &Context) -> CommandResult {
     Ok(())
 }
 
-#[inline]
 // remove json quotes
-fn rjq(s: String) -> String {
+pub fn rjq(s: String) -> String {
     let mut st = String::from(&s); // because mutable String passing weird
     st.truncate(st.len() - 1); // remove ending quote
     return st[1..].to_string(); // remove beginning quote

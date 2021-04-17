@@ -4,5 +4,6 @@ pub mod daily;
 pub mod game;
 pub mod hair;
 pub mod rps;
+pub mod wiki;
 pub mod xkcd;
 pub mod zote;
