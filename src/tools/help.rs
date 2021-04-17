@@ -13,7 +13,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     match args.rest() {
         "" => {
             let response = MessageBuilder::new()
-                .push_bold_safe("Welcome to CafeBot v0.1.0!\n \n")
+                .push_bold_safe("Welcome to CafeBot v0.2.0!\n \n")
                 .push("Commands:\n")
                 .push("**^help [page]** - show help pages. Specify no page for the general help or use one of the following categories: admin\n")
                 .push("**^ping** - pong\n")
@@ -29,6 +29,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .push("**^xkcd** - get xkcd comics. run with no arguments for the latest, 'random' for a random comic, or a number of the specific one you want.\n")
                 .push("**^rockpaperscissors [^rps]** - play rock paper scissors! Example: ^rps rock\n")
                 .push("**^wiki [search term]** - search wikipedia\n")
+                .push("**^dice [^d]** - roll dice using the standard dnd syntax; supports bonuses.\n")
                 .build();
             msg.reply(&ctx.http, &response).await?;
         }
