@@ -13,7 +13,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     match args.rest() {
         "" => {
             let response = MessageBuilder::new()
-                .push_bold_safe("Welcome to CafeBot v0.2.0!\n \n")
+                .push_bold_safe("Welcome to CafeBot v0.1.0!\n \n")
                 .push("Commands:\n")
                 .push("**^help [page]** - show help pages. Specify no page for the general help or use one of the following categories: admin\n")
                 .push("**^ping** - pong\n")
