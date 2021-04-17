@@ -1,5 +1,5 @@
-use serde_json::Value;
 use crate::fun::xkcd::rjq;
+use serde_json::Value;
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
@@ -12,7 +12,16 @@ async fn wiki(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let json: Value = serde_json::from_str(&reqwest::get(&link).await?.text().await?).unwrap();
     let mut ids: Vec<&String> = Vec::new();
     let mut titles: Vec<String> = Vec::new();
-    for (k, v) in json["query"]["pages"].as_object().unwrap().iter() {
+    for (k, v) in match json["query"]["pages"].as_object() {
+        Some(x) => x,
+        None => {
+            let to_send = format!("No Wikipedia results for *{}*.", choice);
+            msg.reply(&ctx.http, &to_send).await?;
+            return Ok(());
+        }
+    }
+    .iter()
+    {
         // v is the json value, k is the id of the page
         ids.push(k);
         titles.push(rjq(v["title"].to_string()));
