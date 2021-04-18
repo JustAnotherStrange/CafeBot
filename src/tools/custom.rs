@@ -1,5 +1,6 @@
 // Make, list, delete, and run custom commands that are unique to each server
-use crate::is_admin;
+use crate::{is_admin, sarcastify};
+use owoify_rs::{Owoifiable, OwoifyLevel};
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
@@ -27,7 +28,7 @@ async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             // gets here if there were no arguments at all
             msg.reply(
                 &ctx.http,
-                "Please enter command in this format: ^custom [command] [output]",
+                "Please enter command in this format: `^custom [command] [output]`.",
             )
             .await?;
             return Ok(());
@@ -72,7 +73,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         Err(_) => {
             msg.reply(
                 &ctx.http,
-                "Please use this format: ^run [custom command name]",
+                "Please use this format: `^run [custom command name]`. You can also pipe with `^run [command_name] | [pipe_program]`.",
             )
             .await?;
             return Ok(());
@@ -122,7 +123,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             // the file does not exist, so the command does not exist
             msg.reply(
                 &ctx.http,
-                "That command doesn't exist yet. Create it with ^custom.",
+                "That command doesn't exist yet. Create it with `^custom`.",
             )
             .await?;
             return Ok(());
@@ -145,7 +146,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         if is_admin(ctx, msg).await {
             fs::remove_file(command_path).unwrap();
             let to_send = format!(
-                    "Deleted command *{}*, which had the output *{}*.",
+                "Deleted command *{}*, which had the output *{}*.",
                 to_run, command_output
             );
             msg.reply(&ctx.http, &to_send).await?;
@@ -158,11 +159,46 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             .await?;
             Ok(())
         }
+    } else if second_args == "|" {
+        let third_args = match args.single::<String>() {
+            Ok(x) => x,
+            Err(_) => {
+                msg.reply(
+                    &ctx.http,
+                    "The syntax for piping is: `^run [command_name] | [pipe_program]`",
+                )
+                .await?;
+                return Ok(());
+            }
+        };
+
+        // piping programs
+        if third_args == "owo" {
+            // owoify the command's output.
+            msg.reply(&ctx.http, command_output.owoify(&OwoifyLevel::Uwu))
+                .await?; // owoify using owoify-rs
+        } else if third_args == "uwu" {
+            // owoify the command's output... even more!!
+            msg.reply(&ctx.http, command_output.owoify(&OwoifyLevel::Uvu))
+                .await?;
+        } else if third_args == "sarcasm" {
+            // make the command's output lIkE tHiS
+            let to_send = sarcastify(command_output.as_str()); // use the same function that ^s uses
+            msg.reply(&ctx.http, &to_send).await?;
+        } else {
+            msg.reply(
+                &ctx.http,
+                "Please pipe into one of the following programs: owo, uwu, sarcasm.",
+            )
+            .await?;
+        }
+
+        Ok(())
     } else {
         // if there is second argument, but it is not "delete", then the user has done the wrong syntax.
         msg.reply(
             &ctx.http,
-            "Please use the syntax: ^run [command name], ^run [command name] delete, or ^run list.",
+            "Please use the syntax: `^run [command name]`, `^run [command name] delete`, `^run list`, or pipe it using the symbol `|`.",
         )
         .await?;
         Ok(())

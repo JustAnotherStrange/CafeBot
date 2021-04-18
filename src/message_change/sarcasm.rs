@@ -17,7 +17,7 @@ async fn sarcasm(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     Ok(())
 }
 
-fn sarcastify(to_sarc: &str) -> String {
+pub fn sarcastify(to_sarc: &str) -> String {
     let mut sarcasted = String::new();
     let mut cap: bool = true;
     for cur in to_sarc.chars() {
