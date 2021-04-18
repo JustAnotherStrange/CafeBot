@@ -9,6 +9,15 @@ use serenity::{
 #[command]
 #[only_in(guilds)]
 async fn admin_test(ctx: &Context, msg: &Message) -> CommandResult {
+    if is_admin(ctx, msg).await {
+        msg.reply(&ctx.http, "You are an admin.").await?;
+    } else {
+        msg.reply(&ctx.http, "You are not an admin.").await?;
+    }
+    Ok(())
+}
+
+pub async fn is_admin(ctx: &Context, msg: &Message) -> bool {
     if let Some(member) = &msg.member {
         for role in &member.roles {
             if role
@@ -16,11 +25,9 @@ async fn admin_test(ctx: &Context, msg: &Message) -> CommandResult {
                 .await
                 .map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR))
             {
-                msg.reply(&ctx.http, "You are an admin.").await?;
-                return Ok(());
+                return true;
             }
         }
     }
-    msg.reply(&ctx.http, "You are not an admin.").await?;
-    Ok(())
+    return false;
 }

@@ -1,4 +1,4 @@
-use crate::fun::xkcd::rjq;
+use crate::rjq;
 use serde_json::Value;
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},

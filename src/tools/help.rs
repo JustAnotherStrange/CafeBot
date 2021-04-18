@@ -13,7 +13,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     match args.rest() {
         "" => {
             let response = MessageBuilder::new()
-                .push_bold_safe("Welcome to CafeBot v0.3.0!\n \n")
+                .push_bold_safe("Welcome to CafeBot v0.3.1!\n \n")
                 .push("Commands:\n")
                 .push("**^help [page]** - show help pages. Specify no page for the general help or use one of the following categories: admin\n")
                 .push("**^ping** - pong\n")
@@ -30,8 +30,8 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .push("**^rockpaperscissors [^rps]** - play rock paper scissors! Example: ^rps rock\n")
                 .push("**^wiki [search term]** - search wikipedia\n")
                 .push("**^dice [^d]** - roll dice using the standard dnd syntax; supports bonuses.\n")
-                .push("**^custom [^create]** - create a custom command. e.g. '^custom bruh bruh moment'.\n")
-                .push("**^run [^r]** - run a custom command. e.g. '^r bruh'\n")
+                .push("**^custom** - create a custom command. e.g. '^custom bruh bruh moment'.\n")
+                .push("**^run [^r]** - run a custom command. e.g. '^r bruh'. Do '^r [command name] delete' to delete one (admin only) or '^r list' to list available commands.\n")
                 .build();
             msg.reply(&ctx.http, &response).await?;
         }
