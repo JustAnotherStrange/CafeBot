@@ -143,7 +143,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     } else {
         msg.reply(
             &ctx.http,
-            "Please use the syntax: ^run [command name], ^run delete, or ^run list.",
+            "Please use the syntax: ^run [command name], ^run [command name] delete, or ^run list.",
         )
         .await?;
         Ok(())
