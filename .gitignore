@@ -15,3 +15,6 @@ log
 
 # daily files
 /daily/
+
+# custom command files
+/customs/

@@ -18,7 +18,7 @@ use fun::{
     bruh::*, count::*, daily::*, dice::*, game::*, hair::*, rps::*, wiki::*, xkcd::*, zote::*,
 };
 use message_change::{owo::*, sarcasm::*, say::*};
-use tools::{help::*, latency::*, ping::*};
+use tools::{custom::*, help::*, latency::*, ping::*};
 
 mod admin;
 mod fun;
@@ -53,7 +53,9 @@ struct Handler;
     rockpaperscissors,
     game,
     wiki,
-    dice
+    dice,
+    custom,
+    run
 )]
 
 struct General;
