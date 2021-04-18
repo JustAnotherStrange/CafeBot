@@ -53,17 +53,17 @@ async fn print_xkcd(num: u32, msg: &Message, ctx: &Context) -> CommandResult {
                                                      // set vars from metadata and format titles, dates, etc
     let title = format!(
         "**xkcd {}: {}**",
-        json["num"].to_string(),
-        rjq(json["safe_title"].to_string())
+        json["num"],
+        json["safe_title"].as_str().unwrap()
     );
     let date = format!(
         "{}-{}-{}",
-        rjq(json["month"].to_string()),
-        rjq(json["day"].to_string()),
-        rjq(json["year"].to_string())
+        json["month"].as_str().unwrap(),
+        json["day"].as_str().unwrap(),
+        json["year"].as_str().unwrap()
     );
-    let image_link = rjq(json["img"].to_string());
-    let desc = rjq(json["alt"].to_string());
+    let image_link = json["img"].as_str().unwrap();
+    let desc = json["alt"].as_str().unwrap();
     // send message with cool embed stuff and image link as an attachment
     let _ = msg
         .channel_id
@@ -84,11 +84,4 @@ async fn print_xkcd(num: u32, msg: &Message, ctx: &Context) -> CommandResult {
         })
         .await;
     Ok(())
-}
-
-// remove json quotes
-pub fn rjq(s: String) -> String {
-    let mut st = String::from(&s); // because mutable String passing weird
-    st.truncate(st.len() - 1); // remove ending quote
-    return st[1..].to_string(); // remove beginning quote
 }

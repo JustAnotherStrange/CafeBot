@@ -75,7 +75,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 // returns the number of the last line and its content.
-fn get_content_of_last_line(filename: &String) -> (String, usize) {
+fn get_content_of_last_line(filename: &str) -> (String, usize) {
     let file = fs::File::open(&filename).expect("failed to open daily file");
     let reader = BufReader::new(file);
     let mut content_of_last_line = String::new();
