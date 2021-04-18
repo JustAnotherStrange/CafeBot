@@ -32,6 +32,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .push("**^dice [^d]** - roll dice using the standard dnd syntax; supports bonuses.\n")
                 .push("**^custom** - create a custom command. e.g. '^custom bruh bruh moment'.\n")
                 .push("**^run [^r]** - run a custom command. e.g. '^r bruh'. Do '^r [command name] delete' to delete one (admin only) or '^r list' to list available commands.\n")
+                .push("as well, you can pipe the output into 'programs' using the `|` symbol.")
                 .build();
             msg.reply(&ctx.http, &response).await?;
         }

@@ -175,11 +175,11 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         // piping programs
         if third_args == "owo" {
             // owoify the command's output.
-            msg.reply(&ctx.http, command_output.owoify(&OwoifyLevel::Uwu))
+            msg.reply(&ctx.http, command_output.owoify(&OwoifyLevel::Owo))
                 .await?; // owoify using owoify-rs
         } else if third_args == "uwu" {
             // owoify the command's output... even more!!
-            msg.reply(&ctx.http, command_output.owoify(&OwoifyLevel::Uvu))
+            msg.reply(&ctx.http, command_output.owoify(&OwoifyLevel::Uwu))
                 .await?;
         } else if third_args == "sarcasm" {
             // make the command's output lIkE tHiS
