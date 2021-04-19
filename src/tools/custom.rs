@@ -173,26 +173,18 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         };
 
         // piping programs
+        let mut to_send = String::from("Please pipe into one of the following programs: owo, uwu, uvu, sarcasm");
         if third_args == "owo" {
-            // owoify the command's output.
-            msg.reply(&ctx.http, command_output.owoify(&OwoifyLevel::Owo))
-                .await?; // owoify using owoify-rs
+            to_send = command_output.owoify(&OwoifyLevel::Owo); // owoify using owoify-rs
         } else if third_args == "uwu" {
-            // owoify the command's output... even more!!
-            msg.reply(&ctx.http, command_output.owoify(&OwoifyLevel::Uwu))
-                .await?;
+            to_send = command_output.owoify(&OwoifyLevel::Uwu); // owoify even more!!
+        } else if third_args == "uvu" {
+            to_send = command_output.owoify(&OwoifyLevel::Uvu); // owoify EVEN MORE?!?!?
         } else if third_args == "sarcasm" {
             // make the command's output lIkE tHiS
-            let to_send = sarcastify(command_output.as_str()); // use the same function that ^s uses
-            msg.reply(&ctx.http, &to_send).await?;
-        } else {
-            msg.reply(
-                &ctx.http,
-                "Please pipe into one of the following programs: owo, uwu, sarcasm.",
-            )
-            .await?;
+            to_send = sarcastify(command_output.as_str()); // use the same function that ^s uses
         }
-
+        msg.reply(&ctx.http, &to_send).await?;
         Ok(())
     } else {
         // if there is second argument, but it is not "delete", then the user has done the wrong syntax.
