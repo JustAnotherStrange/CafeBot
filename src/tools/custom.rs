@@ -160,31 +160,40 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             Ok(())
         }
     } else if second_args == "|" {
-        let third_args = match args.single::<String>() {
-            Ok(x) => x,
-            Err(_) => {
-                msg.reply(
-                    &ctx.http,
-                    "The syntax for piping is: `^run [command_name] | [pipe_program]`",
-                )
-                .await?;
-                return Ok(());
-            }
-        };
+        let mut modified_text = command_output;
+        let mut next_next_args: String;
+        loop {
+            let next_args = match args.single::<String>() {
+                Ok(x) => x,
+                Err(_) => {
+                    msg.reply(
+                        &ctx.http,
+                        "The syntax for piping is: `^run [command_name] | [pipe_program]`",
+                    )
+                        .await?;
+                    return Ok(());
+                }
+            };
 
-        // piping programs
-        let mut to_send = String::from("Please pipe into one of the following programs: owo, uwu, uvu, sarcasm");
-        if third_args == "owo" {
-            to_send = command_output.owoify(&OwoifyLevel::Owo); // owoify using owoify-rs
-        } else if third_args == "uwu" {
-            to_send = command_output.owoify(&OwoifyLevel::Uwu); // owoify even more!!
-        } else if third_args == "uvu" {
-            to_send = command_output.owoify(&OwoifyLevel::Uvu); // owoify EVEN MORE?!?!?
-        } else if third_args == "sarcasm" {
-            // make the command's output lIkE tHiS
-            to_send = sarcastify(command_output.as_str()); // use the same function that ^s uses
+            // piping programs
+            match next_args.as_str() {
+                "owo" => modified_text = modified_text.owoify(&OwoifyLevel::Owo), // owoify using owoify-rs
+                "uwu" => modified_text = modified_text.owoify(&OwoifyLevel::Uwu), // owoify even more!!
+                "uvu" => modified_text = modified_text.owoify(&OwoifyLevel::Uvu), // owoify EVEN MORE?!?!?
+                "sarcasm" => modified_text = sarcastify(modified_text.as_str()), // use the same function that ^s uses
+                _ => modified_text = String::from("Please pipe into one of the following programs: owo, uwu, uvu, sarcasm."),
+            }
+            next_next_args = match args.single::<String>() {
+                Ok(x) => x,
+                Err(_) => break,
+            };
+            if next_next_args == "|" {
+                continue;
+            } else {
+                break;
+            }
         }
-        msg.reply(&ctx.http, &to_send).await?;
+        msg.reply(&ctx.http, &modified_text).await?;
         Ok(())
     } else {
         // if there is second argument, but it is not "delete", then the user has done the wrong syntax.
