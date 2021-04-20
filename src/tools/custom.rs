@@ -170,7 +170,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                         &ctx.http,
                         "The syntax for piping is: `^run [command_name] | [pipe_program]`",
                     )
-                        .await?;
+                    .await?;
                     return Ok(());
                 }
             };
@@ -181,7 +181,11 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 "uwu" => modified_text = modified_text.owoify(&OwoifyLevel::Uwu), // owoify even more!!
                 "uvu" => modified_text = modified_text.owoify(&OwoifyLevel::Uvu), // owoify EVEN MORE?!?!?
                 "sarcasm" => modified_text = sarcastify(modified_text.as_str()), // use the same function that ^s uses
-                _ => modified_text = String::from("Please pipe into one of the following programs: owo, uwu, uvu, sarcasm."),
+                _ => {
+                    modified_text = String::from(
+                        "Please pipe into one of the following programs: owo, uwu, uvu, sarcasm.",
+                    )
+                }
             }
             next_next_args = match args.single::<String>() {
                 Ok(x) => x,
