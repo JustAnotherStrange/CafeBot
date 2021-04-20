@@ -176,17 +176,15 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             };
 
             // piping programs
-            match next_args.as_str() {
-                "owo" => modified_text = modified_text.owoify(&OwoifyLevel::Owo), // owoify using owoify-rs
-                "uwu" => modified_text = modified_text.owoify(&OwoifyLevel::Uwu), // owoify even more!!
-                "uvu" => modified_text = modified_text.owoify(&OwoifyLevel::Uvu), // owoify EVEN MORE?!?!?
-                "sarcasm" => modified_text = sarcastify(modified_text.as_str()), // use the same function that ^s uses
-                _ => {
-                    modified_text = String::from(
-                        "Please pipe into one of the following programs: owo, uwu, uvu, sarcasm.",
-                    )
-                }
-            }
+            modified_text = match next_args.as_str() {
+                "owo" => modified_text.owoify(&OwoifyLevel::Owo), // owoify using owoify-rs
+                "uwu" => modified_text.owoify(&OwoifyLevel::Uwu), // owoify even more!!
+                "uvu" => modified_text.owoify(&OwoifyLevel::Uvu), // owoify EVEN MORE?!?!?
+                "sarcasm" => sarcastify(modified_text.as_str()), // use the same function that ^s uses
+                _ => String::from(
+                    "Please pipe into one of the following programs: owo, uwu, uvu, sarcasm.",
+                ),
+            };
             next_next_args = match args.single::<String>() {
                 Ok(x) => x,
                 Err(_) => break,
