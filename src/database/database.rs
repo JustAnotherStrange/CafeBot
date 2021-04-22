@@ -21,7 +21,7 @@ pub fn create_user_if_not_exist(msg: &Message) -> Result<()> {
     // insert if not already exists
     conn.execute(
         "insert or ignore into users values (?1, ?2)",
-        params![msg.author.id.as_u64(), 0],
+        params![msg.author.id.as_u64(), 10],
     )?;
     Ok(())
 }
