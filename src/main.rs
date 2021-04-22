@@ -13,20 +13,20 @@ use serenity::{
     },
 };
 
+use database::database::db_init;
 use admin::{admin_test::*, slow_mode::*, status::*};
+use database::money::*;
 use fun::{
     bruh::*, count::*, daily::*, dice::*, game::*, hair::*, rps::*, wiki::*, xkcd::*, zote::*,
 };
 use message_change::{owo::*, sarcasm::*, say::*};
 use tools::{custom::*, help::*, latency::*, ping::*};
-use database::money_up::*;
-use crate::database::database::db_init;
 
 mod admin;
+mod database;
 mod fun;
 mod message_change;
 mod tools;
-mod database;
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
 // A container type is created for inserting into the Client's `data`, which
@@ -59,7 +59,8 @@ struct Handler;
     dice,
     custom,
     run,
-    money_up
+    money_up,
+    money
 )]
 
 struct General;
@@ -122,9 +123,10 @@ async fn main() {
         .await
         .expect("Err creating client");
     // db
-    if !(std::path::Path::new("users.db").exists()) {
-        std::fs::File::create("users.db").unwrap(); // create the db if it doesn't already exist
+    if !(std::path::Path::new("data.db").exists()) {
+        std::fs::File::create("data.db").unwrap(); // create the db if it doesn't already exist
     }
+    db_init().await.unwrap();
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }

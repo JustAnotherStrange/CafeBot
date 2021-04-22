@@ -1,10 +1,5 @@
 use rusqlite::{params, Connection, Result};
-use serenity::{
-    client::Context,
-    framework::standard::{macros::command, CommandResult},
-    model::{channel::Message, prelude::*},
-};
-use std::fs;
+use serenity::model::channel::Message;
 
 pub async fn db_init() -> Result<()> {
     let conn = gen_connection();
@@ -15,12 +10,11 @@ pub async fn db_init() -> Result<()> {
         "create table if not exists users(
     id int not null unique, money int not null)",
         [],
-    )
-    .expect("database oof :sob:");
+    )?;
     Ok(())
 }
 pub fn gen_connection() -> Connection {
-    Connection::open("users.db").expect("failed to open database")
+    Connection::open("data.db").expect("failed to open database")
 }
 pub fn create_user_if_not_exist(msg: &Message) -> Result<()> {
     let conn = gen_connection();
@@ -49,7 +43,3 @@ pub fn get_money(msg: &Message) -> Result<i32> {
     );
     return money;
 }
-// async fn is_author_in_db(msg: &Message, conn: &Connection) -> Result<bool> {
-//     let mut stmt = conn.prepare("select id from users where id=?1")?;
-//     return stmt.exists(params![msg.author.id.as_u64()]);
-// }
