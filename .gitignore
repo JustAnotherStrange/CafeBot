@@ -20,4 +20,4 @@ log
 /customs/
 
 # db
-users.db
+data.db
