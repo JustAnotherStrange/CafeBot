@@ -27,6 +27,7 @@ pub fn create_user_if_not_exist(msg: &Message) -> Result<()> {
 }
 pub fn money_increment(msg: &Message, amount: i32) -> Result<()> {
     let conn = gen_connection();
+    create_user_if_not_exist(msg)?;
     conn.execute(
         "update users set money = money + ?1 where id = ?2",
         params![amount, msg.author.id.as_u64()],
@@ -35,6 +36,7 @@ pub fn money_increment(msg: &Message, amount: i32) -> Result<()> {
 }
 pub fn get_money(msg: &Message) -> Result<i32> {
     let conn = gen_connection();
+    create_user_if_not_exist(msg)?;
     // let mut stmt = conn.prepare("select money from users where id = ?1")?;
     let money = conn.query_row(
         "select money from users where id = ?1",

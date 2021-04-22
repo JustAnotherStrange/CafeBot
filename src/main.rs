@@ -13,8 +13,8 @@ use serenity::{
     },
 };
 
-use database::database::db_init;
 use admin::{admin_test::*, slow_mode::*, status::*};
+use database::database::db_init;
 use database::money::*;
 use fun::{
     bruh::*, count::*, daily::*, dice::*, game::*, hair::*, rps::*, wiki::*, xkcd::*, zote::*,
@@ -59,8 +59,8 @@ struct Handler;
     dice,
     custom,
     run,
-    money_up,
-    money
+    money,
+    coin_flip
 )]
 
 struct General;
