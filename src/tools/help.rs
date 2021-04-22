@@ -29,7 +29,9 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             `^dice [^d]` - roll dice using the standard dnd syntax; supports bonuses.
             `^custom` - create a custom command. e.g. '^custom bruh bruh moment'.
             `^run [^r]` - run a custom command. e.g. '^r bruh'. Do '^r [command name] delete' to delete one (admin only) or '^r list' to list available commands.
-            as well, you can pipe the output into 'programs' using the `|` symbol.";
+            as well, you can pipe the output into 'programs' using the `|` symbol.
+            `^wallet` - see how much money you have.
+            `^coin_flip [bet]` - flip a coin for money.";
             // send commands as an embed
             msg.channel_id
                 .send_message(&ctx.http, |m| {
