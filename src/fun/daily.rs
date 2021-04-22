@@ -1,4 +1,5 @@
 // run daily to try to keep up a streak.
+use crate::database::database::{get_money, money_increment};
 use chrono::{prelude::*, Duration};
 use serenity::{
     framework::standard::{macros::command, CommandResult},
@@ -41,8 +42,9 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
         let content_to_write = format!("{}\n", date_string); // add newline to date_string
         file.write_all(content_to_write.as_bytes())
             .expect("failed to write content to daily file");
-        msg.reply(&ctx.http, "Daily complete! This is day 0.")
-            .await?;
+        money_increment(msg, 10).unwrap();
+        let response = format!("Daily complete! This is day 0. You got **10** monies.");
+        msg.reply(&ctx.http, response).await?;
     } else {
         if content_of_last_line != date_string {
             // if previous is not today
@@ -51,7 +53,18 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
                 let content_to_write = format!("{}\n", date_string);
                 file.write_all(content_to_write.as_bytes())
                     .expect("failed to write content to daily file");
-                let response = format!("Daily complete! This is day {:?}.", amount_of_lines + 1);
+                let days = amount_of_lines + 1;
+                let to_increment: i32;
+                if days <= 10 {
+                    to_increment = days as i32 * 10;
+                } else {
+                    to_increment = 100;
+                };
+                money_increment(msg, to_increment)?;
+                let response = format!(
+                    "Daily complete! This is day {:?}. You got **{}** monies.",
+                    days, to_increment
+                );
                 msg.reply(&ctx.http, &response).await?;
             } else {
                 // if previous not yesterday, lose streak

@@ -14,6 +14,8 @@ use serenity::{
 };
 
 use admin::{admin_test::*, slow_mode::*, status::*};
+use database::database::db_init;
+use database::money::*;
 use fun::{
     bruh::*, count::*, daily::*, dice::*, game::*, hair::*, rps::*, wiki::*, xkcd::*, zote::*,
 };
@@ -21,6 +23,7 @@ use message_change::{owo::*, sarcasm::*, say::*};
 use tools::{custom::*, help::*, latency::*, ping::*};
 
 mod admin;
+mod database;
 mod fun;
 mod message_change;
 mod tools;
@@ -55,7 +58,9 @@ struct Handler;
     wiki,
     dice,
     custom,
-    run
+    run,
+    money,
+    coin_flip
 )]
 
 struct General;
@@ -117,6 +122,11 @@ async fn main() {
         .framework(framework)
         .await
         .expect("Err creating client");
+    // db
+    if !(std::path::Path::new("data.db").exists()) {
+        std::fs::File::create("data.db").unwrap(); // create the db if it doesn't already exist
+    }
+    db_init().await.unwrap();
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }

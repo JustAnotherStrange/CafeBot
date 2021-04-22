@@ -18,3 +18,9 @@ log
 
 # custom command files
 /customs/
+
+# db
+data.db
+
+# ide files
+/.idea/
