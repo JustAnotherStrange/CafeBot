@@ -19,11 +19,14 @@ use fun::{
 };
 use message_change::{owo::*, sarcasm::*, say::*};
 use tools::{custom::*, help::*, latency::*, ping::*};
+use database::money_up::*;
+use crate::database::database::db_init;
 
 mod admin;
 mod fun;
 mod message_change;
 mod tools;
+mod database;
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34
 // A container type is created for inserting into the Client's `data`, which
@@ -55,7 +58,8 @@ struct Handler;
     wiki,
     dice,
     custom,
-    run
+    run,
+    money_up
 )]
 
 struct General;
@@ -117,6 +121,10 @@ async fn main() {
         .framework(framework)
         .await
         .expect("Err creating client");
+    // db
+    if !(std::path::Path::new("users.db").exists()) {
+        std::fs::File::create("users.db").unwrap(); // create the db if it doesn't already exist
+    }
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }
