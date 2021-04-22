@@ -21,3 +21,6 @@ log
 
 # db
 data.db
+
+# ide files
+/.idea/
