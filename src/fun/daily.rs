@@ -1,5 +1,5 @@
 // run daily to try to keep up a streak.
-use crate::database::database::{get_money, money_increment};
+use crate::database::database::money_increment;
 use chrono::{prelude::*, Duration};
 use serenity::{
     framework::standard::{macros::command, CommandResult},

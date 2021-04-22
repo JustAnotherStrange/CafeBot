@@ -2,13 +2,13 @@
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
-    prelude::*
+    prelude::*,
 };
 
 #[command]
 async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // build the message
-    let footer = "CafeBot v0.3.5: https://github.com/JustAnotherStrange/CafeBot";
+    let footer = "CafeBot v0.4.0: https://github.com/JustAnotherStrange/CafeBot";
     match args.rest() {
         "" => {
             let response = "__Commands:__

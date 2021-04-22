@@ -1,4 +1,4 @@
-use crate::database::database::{create_user_if_not_exist, get_money, money_increment};
+use crate::database::database::{get_money, money_increment};
 use rand::{thread_rng, Rng};
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
