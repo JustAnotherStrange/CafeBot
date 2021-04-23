@@ -127,7 +127,7 @@ async fn main() {
     if !(std::path::Path::new("data.db").exists()) {
         std::fs::File::create("data.db").unwrap(); // create the db if it doesn't already exist
     }
-    db_init().await.unwrap();
+    db_init().unwrap();
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }

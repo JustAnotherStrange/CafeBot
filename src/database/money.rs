@@ -57,7 +57,8 @@ async fn give_money(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         }
     };
     if amount > get_money(&msg.author)? {
-        msg.reply(&ctx.http, "You can't give more money than you have.").await?;
+        msg.reply(&ctx.http, "You can't give more money than you have.")
+            .await?;
         return Ok(());
     }
     let mentions = &msg.mentions;
@@ -70,8 +71,9 @@ async fn give_money(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         return Ok(());
     }
     if &mentions[0] == &msg.author {
-        msg.reply(&ctx.http, "You can't give money to yourself.").await?;
-        return Ok(())
+        msg.reply(&ctx.http, "You can't give money to yourself.")
+            .await?;
+        return Ok(());
     }
     money_increment(&mentions[0], amount)?;
     money_increment(&msg.author, -amount)?;

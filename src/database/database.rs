@@ -1,7 +1,7 @@
 use rusqlite::{params, Connection, Result};
 use serenity::model::prelude::*;
 
-pub async fn db_init() -> Result<()> {
+pub fn db_init() -> Result<()> {
     let conn = gen_connection();
     // creates a table if it doesn't exist called "users"
     // it has two columns: id (discord id) and money (how much money they have)
@@ -9,6 +9,12 @@ pub async fn db_init() -> Result<()> {
     conn.execute(
         "create table if not exists users(
     id int not null unique, money int not null)",
+        [],
+    )?;
+    // customs table
+    conn.execute(
+        "create table if not exists customs(
+    guild_id int not null, name text not null, output text)",
         [],
     )?;
     Ok(())
