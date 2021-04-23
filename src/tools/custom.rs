@@ -43,24 +43,23 @@ async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         params![guildid, command_name, command_output],
     )?;
 
-
     // open the command's file
 
     // complete!
-    // let to_send = format!(
-    //     "**Success:** custom command *{}* created with the output *{}*.",
-    //     command_name, command_output
-    // );
-    // msg.reply(&ctx.http, &to_send).await?;
+    let to_send = format!(
+        "**DB Success:** custom command *{}* created with the output *{}*.",
+        command_name, command_output
+    );
+    msg.reply(&ctx.http, &to_send).await?;
     Ok(())
 }
 fn does_command_exist(guildid: u64, command_name: String) -> bool {
     let conn = gen_connection();
-    let mut statement = conn.prepare("select (guild_id, users) from customs where guild_id = ?1 and name = ?2").unwrap();
-    let query: Option<u64> = statement
+    let mut statement = conn.prepare("select * from customs where guild_id = ?1 and name = ?2").unwrap();
+    let query: Option<String> = statement
         .query_row(
             params![guildid, command_name],
-            |row| Ok(row.get(0)?),
+            |row| Ok(row.get(1)?),
         )
         .optional().unwrap();
     return match query {

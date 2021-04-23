@@ -14,7 +14,7 @@ pub fn db_init() -> Result<()> {
     // customs table
     conn.execute(
         "create table if not exists customs(
-    guild_id int not null, name text not null, output text",
+    guild_id int not null, name text not null, output text)",
         [],
     )?;
     Ok(())
