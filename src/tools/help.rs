@@ -8,7 +8,7 @@ use serenity::{
 #[command]
 async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // build the message
-    let footer = "CafeBot v0.4.0: https://github.com/JustAnotherStrange/CafeBot";
+    let footer = "CafeBot v0.4.1: https://github.com/JustAnotherStrange/CafeBot";
     match args.rest() {
         "" => {
             let response = "__Commands:__
@@ -31,7 +31,8 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             `^run [^r]` - run a custom command. e.g. '^r bruh'. Do '^r [command name] delete' to delete one (admin only) or '^r list' to list available commands.
             as well, you can pipe the output into 'programs' using the `|` symbol.
             `^wallet` - see how much money you have.
-            `^coin_flip [bet]` - flip a coin for money.";
+            `^coin_flip [bet]` - flip a coin for money.
+            ^give_money [^give] [amount] [recipient]` - give money to someone";
             // send commands as an embed
             msg.channel_id
                 .send_message(&ctx.http, |m| {

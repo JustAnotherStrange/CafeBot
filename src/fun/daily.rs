@@ -42,7 +42,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
         let content_to_write = format!("{}\n", date_string); // add newline to date_string
         file.write_all(content_to_write.as_bytes())
             .expect("failed to write content to daily file");
-        money_increment(msg, 10).unwrap();
+        money_increment(&msg.author, 10).unwrap();
         let response = format!("Daily complete! This is day 0. You got **10** monies.");
         msg.reply(&ctx.http, response).await?;
     } else {
@@ -60,7 +60,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
                 } else {
                     to_increment = 100;
                 };
-                money_increment(msg, to_increment)?;
+                money_increment(&msg.author, to_increment)?;
                 let response = format!(
                     "Daily complete! This is day {:?}. You got **{}** monies.",
                     days, to_increment

@@ -60,7 +60,8 @@ struct Handler;
     custom,
     run,
     money,
-    coin_flip
+    coin_flip,
+    give_money
 )]
 
 struct General;
