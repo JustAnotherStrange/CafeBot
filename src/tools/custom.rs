@@ -1,6 +1,6 @@
 // Make, list, delete, and run custom commands that are unique to each server
 use crate::database::database::{db_init, gen_connection};
-use crate::{is_admin, sarcastify};
+use crate::sarcastify;
 use owoify_rs::{Owoifiable, OwoifyLevel};
 use rusqlite::{params, OptionalExtension};
 use serenity::{
@@ -8,7 +8,6 @@ use serenity::{
     model::prelude::*,
     prelude::*,
 };
-use std::fs;
 
 #[command]
 #[only_in(guilds)]
@@ -32,7 +31,7 @@ async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     };
     if does_command_exist(guildid, command_name.clone()) {
         msg.reply(&ctx.http, "That command already exists.").await?;
-        return Ok(())
+        return Ok(());
     }
 
     // only gets here if the command does not already exist
@@ -55,17 +54,44 @@ async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 }
 fn does_command_exist(guildid: u64, command_name: String) -> bool {
     let conn = gen_connection();
-    let mut statement = conn.prepare("select * from customs where guild_id = ?1 and name = ?2").unwrap();
+    let mut statement = conn
+        .prepare("select * from customs where guild_id = ?1 and name = ?2")
+        .unwrap();
     let query: Option<String> = statement
-        .query_row(
-            params![guildid, command_name],
-            |row| Ok(row.get(1)?),
-        )
-        .optional().unwrap();
+        .query_row(params![guildid, command_name], |row| Ok(row.get(1)?))
+        .optional()
+        .unwrap();
     return match query {
         Some(_) => true,
         None => false,
     };
+}
+
+fn get_command_output(guildid: u64, command_name: String) -> Option<String> {
+    let conn = gen_connection();
+    let mut statement = conn
+        .prepare("select * from customs where guild_id = ?1 and name = ?2")
+        .unwrap();
+    return statement
+        .query_row(params![guildid, command_name], |row| Ok(row.get(2)?))
+        .optional()
+        .unwrap();
+}
+fn get_list_of_commands(guildid: u64) -> String {
+    let conn = gen_connection();
+    let mut statement = conn.prepare("select * from customs where guild_id = ?1").unwrap();
+    let rows: Option<String> = statement
+        .query_row(params![guildid], |row| Ok(row.get(1)?))
+        .optional()
+        .unwrap();
+    let mut commands = String::new();
+    let mut i = 1;
+    for command in rows {
+        let to_push = format!("{}: **{}**\n", i, command);
+        commands.push_str(to_push.as_str());
+        i += 1;
+    }
+    return commands;
 }
 
 #[command]
@@ -87,25 +113,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // list commands
     let guildid = msg.guild_id.unwrap().as_u64().clone();
     if to_run == "list" {
-        // make a string with all the things separated by \n
-        let guild_path = format!("customs/{}", guildid); // get the guild's unique foldr
-        let dir = fs::read_dir(&guild_path).unwrap(); // read directory
-
-        // format and print the contents of the guild's directory
-        let mut commands = String::new();
-        let mut temp = String::new();
-        let mut index = 1;
-        for path in dir {
-            temp.clear(); // do I need this?
-            temp = format!(
-                "{}: **{:?}**\n",
-                index,
-                path.unwrap().path().file_name().unwrap()
-            );
-            commands.push_str(&temp);
-            index += 1;
-        }
-
+        let commands = get_list_of_commands(guildid);
         // send the formatted list in a nice embed
         msg.channel_id
             .send_message(&ctx.http, |m| {
@@ -121,20 +129,13 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     }
 
     // read the command's file and output its contents
-    let command_path = format!("customs/{}/{}", guildid, to_run);
-    let command_output = match fs::read_to_string(&command_path) {
-        Ok(x) => x,
-        Err(_) => {
-            // the file does not exist, so the command does not exist
-            msg.reply(
-                &ctx.http,
-                "That command doesn't exist yet. Create it with `^custom`.",
-            )
-            .await?;
+    let command_output = match get_command_output(guildid, to_run) {
+        Some(x) => x,
+        None => {
+            msg.reply(&ctx.http, "That command doesn't exist yet. Create it with `^custom`.").await?;
             return Ok(());
-        }
+        },
     };
-
     // check if there is a second argument
     let second_args = match args.single::<String>() {
         Ok(x) => x,
@@ -148,22 +149,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // if you get here, there is a second argument.
     return if second_args == "delete" {
         // delete a command by simply removing its file, but only if the user running the command is an admin.
-        if is_admin(ctx, msg).await {
-            fs::remove_file(command_path).unwrap();
-            let to_send = format!(
-                "Deleted command *{}*, which had the output *{}*.",
-                to_run, command_output
-            );
-            msg.reply(&ctx.http, &to_send).await?;
-            Ok(())
-        } else {
-            msg.reply(
-                &ctx.http,
-                "You aren't an admin, so you can't delete commands.",
-            )
-            .await?;
-            Ok(())
-        }
+        Ok(())
     } else if second_args == "|" {
         let mut modified_text = command_output;
         let mut next_next_args: String;
