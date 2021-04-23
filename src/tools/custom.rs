@@ -1,26 +1,22 @@
 // Make, list, delete, and run custom commands that are unique to each server
+use crate::database::database::{db_init, gen_connection};
 use crate::{is_admin, sarcastify};
 use owoify_rs::{Owoifiable, OwoifyLevel};
+use rusqlite::{params, OptionalExtension};
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
     prelude::*,
 };
-use std::{fs, fs::OpenOptions, io::Write};
+use std::fs;
 
 #[command]
 #[only_in(guilds)]
 // create custom commands
 async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    if !(std::path::Path::new("customs").exists()) {
-        fs::create_dir("customs")?; // if folder "customs" doesn't exist, create it.
-    };
-    // for custom commands different in each guild
+    db_init()?; // will create customs table if not exist
+                // for custom commands different in each guild
     let guildid = msg.guild_id.unwrap().as_u64().clone();
-    let guildid_path = format!("customs/{}", guildid); // unique folder for each guild
-    if !(std::path::Path::new(&guildid_path).exists()) {
-        fs::create_dir(&guildid_path)?; // create the guild's unique folder if it doesn't already exist
-    }
     // Argument parsing
     let command_name = match args.single::<String>() {
         Ok(x) => x,
@@ -34,33 +30,43 @@ async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             return Ok(());
         }
     };
-
-    let command_output = args.rest().to_string(); // the rest of the arguments, which does not include the first word (because that was taken out earlier)
-    let filename = format!("{}/{}", guildid_path, command_name); // file for each command, and the file's name is the name of the command
-    if !(std::path::Path::new(&filename).exists()) {
-        fs::File::create(&filename)?; // create the command's file if it doesn't exist already
-    } else {
-        // the command already exists
-        let to_send = format!("The custom command *{}* already exists.", command_name);
-        msg.reply(&ctx.http, &to_send).await?;
-        return Ok(());
+    if does_command_exist(guildid, command_name.clone()) {
+        msg.reply(&ctx.http, "That command already exists.").await?;
+        return Ok(())
     }
+
     // only gets here if the command does not already exist
+    let command_output = args.rest().to_string(); // the rest of the arguments, which does not include the first word (because that was taken out earlier)
+    let conn = gen_connection();
+    conn.execute(
+        "insert or ignore into customs values (?1, ?2, ?3)",
+        params![guildid, command_name, command_output],
+    )?;
+
+
     // open the command's file
-    let mut command_file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(&filename)
-        .unwrap();
-    command_file.write_all(command_output.as_bytes()).unwrap(); // write the desired contents to the command's file
 
     // complete!
-    let to_send = format!(
-        "**Success:** custom command *{}* created with the output *{}*.",
-        command_name, command_output
-    );
-    msg.reply(&ctx.http, &to_send).await?;
+    // let to_send = format!(
+    //     "**Success:** custom command *{}* created with the output *{}*.",
+    //     command_name, command_output
+    // );
+    // msg.reply(&ctx.http, &to_send).await?;
     Ok(())
+}
+fn does_command_exist(guildid: u64, command_name: String) -> bool {
+    let conn = gen_connection();
+    let mut statement = conn.prepare("select (guild_id, users) from customs where guild_id = ?1 and name = ?2").unwrap();
+    let query: Option<u64> = statement
+        .query_row(
+            params![guildid, command_name],
+            |row| Ok(row.get(0)?),
+        )
+        .optional().unwrap();
+    return match query {
+        Some(_) => true,
+        None => false,
+    };
 }
 
 #[command]
