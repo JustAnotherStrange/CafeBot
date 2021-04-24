@@ -1,3 +1,4 @@
+pub mod blackjack;
 pub mod bruh;
 pub mod count;
 pub mod daily;

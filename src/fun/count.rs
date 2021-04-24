@@ -39,6 +39,9 @@ fn get_number_or_create(guild_id: &u64) -> Result<u64, Error> {
 
 fn number_increment(guild_id: &u64) -> Result<(), Error> {
     let conn = gen_connection();
-    conn.execute("update count set count = count + 1 where guild_id = ?1", params![guild_id])?;
+    conn.execute(
+        "update count set count = count + 1 where guild_id = ?1",
+        params![guild_id],
+    )?;
     Ok(())
 }
