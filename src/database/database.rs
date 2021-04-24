@@ -17,6 +17,12 @@ pub fn db_init() -> Result<()> {
     guild_id int not null, name text not null, output text)",
         [],
     )?;
+    // daily table
+    conn.execute(
+        "create table if not exists daily(
+    id int not null unique, date text not null, streak int not null)",
+        [],
+    )?;
     Ok(())
 }
 pub fn gen_connection() -> Connection {
