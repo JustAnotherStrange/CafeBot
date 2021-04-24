@@ -4,6 +4,7 @@ use serenity::{
     model::prelude::*,
     prelude::*,
 };
+use crate::admin::admin_test::is_admin;
 
 #[command]
 async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
@@ -51,37 +52,27 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .await?;
         }
         "admin" => {
-            if let Some(member) = &msg.member {
-                // only let admins ask for admin help
-                for role in &member.roles {
-                    if role
-                        .to_role_cached(&ctx.cache)
-                        .await
-                        .map_or(false, |r| r.has_permission(Permissions::ADMINISTRATOR))
-                    {
-                        let response = "__Commands:__
-                        `^admin_test` - test if you are an admin
-                        `^status [string]` - change the bot's status (will display as 'Playing [entered status]')
-                        `^slow_mode [seconds]` - set the slow mode in that channel to a certain amount of seconds. set to 0 to turnoff slow mode.";
-                        // send commands as an embed
-                        msg.channel_id
-                            .send_message(&ctx.http, |m| {
-                                // m.content("");
-                                m.embed(|e| {
-                                    e.title("**CafeBot Admin**");
-                                    e.description(&response);
-                                    e.footer(|f| {
-                                        f.text(&footer);
-                                        f
-                                    });
-                                    e
-                                });
-                                m
-                            })
-                            .await?;
-                        break;
-                    }
-                }
+            if is_admin(ctx, msg) {
+                let response = "__Commands:__
+                `^admin_test` - test if you are an admin
+                `^status [string]` - change the bot's status (will display as 'Playing [entered status]')
+                `^slow_mode [seconds]` - set the slow mode in that channel to a certain amount of seconds. set to 0 to turnoff slow mode.";
+                // send commands as an embed
+                msg.channel_id
+                    .send_message(&ctx.http, |m| {
+                        // m.content("");
+                        m.embed(|e| {
+                            e.title("**CafeBot Admin**");
+                            e.description(&response);
+                            e.footer(|f| {
+                                f.text(&footer);
+                                f
+                            });
+                            e
+                        });
+                        m
+                    })
+                    .await?;
             } else {
                 msg.reply(&ctx.http, "You can't access this help page")
                     .await?;
