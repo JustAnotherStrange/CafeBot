@@ -15,17 +15,18 @@ use serenity::{
 
 use admin::{admin_test::*, slow_mode::*, status::*};
 use database::database::db_init;
-use database::money::*;
 use fun::{
     bruh::*, count::*, daily::*, dice::*, game::*, hair::*, rps::*, wiki::*, xkcd::*, zote::*,
 };
 use message_change::{owo::*, sarcasm::*, say::*};
+use money::{coin_flip::*, give::*, money::*};
 use tools::{custom::*, help::*, latency::*, ping::*};
 
 mod admin;
 mod database;
 mod fun;
 mod message_change;
+mod money;
 mod tools;
 
 // https://github.com/serenity-rs/serenity/blob/53d5007a8d119158b5f0eea0a883b88de8861ae5/examples/e05_command_framework/src/main.rs#L34

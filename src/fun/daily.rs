@@ -25,12 +25,15 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
         Some(x) => x,
         None => {
             // if the file has just been created, allow the Day 1 (previously it would say "last line != yesterdays date, so fail"
-            conn.execute("insert into daily values (?1, ?2, ?3)", params![msg.author.id.as_u64(), date_string, 0])?;
+            conn.execute(
+                "insert into daily values (?1, ?2, ?3)",
+                params![msg.author.id.as_u64(), date_string, 0],
+            )?;
             money_increment(&msg.author, 10).unwrap();
             let response = format!("Daily complete! This is day 0. You got **10** monies.");
             msg.reply(&ctx.http, response).await?;
             return Ok(());
-        },
+        }
     };
 
     let user_id = user.id;
@@ -41,7 +44,10 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
         // if previous is not today
         if date_from_db == yesterday_string {
             // if previous was yesterday
-            conn.execute("update daily set date = ?1, streak = streak + 1 where id = ?2", params![date_string, user_id])?;
+            conn.execute(
+                "update daily set date = ?1, streak = streak + 1 where id = ?2",
+                params![date_string, user_id],
+            )?;
             // money add
             let days = streak_from_db + 1;
             let to_increment: i32;
@@ -88,6 +94,7 @@ fn get_user(user: &User) -> Option<Daily> {
                 streak: row.get(2)?,
             })
         })
-        .optional().unwrap();
+        .optional()
+        .unwrap();
     // the .optional() makes it return an Option, which can be used to check if there is or is not a row with the specified params
 }
