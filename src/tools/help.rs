@@ -1,15 +1,15 @@
 // Simple help command.
+use crate::admin::admin_test::is_admin;
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
     prelude::*,
 };
-use crate::admin::admin_test::is_admin;
 
 #[command]
 async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // build the message
-    let footer = "CafeBot v0.4.3: https://github.com/JustAnotherStrange/CafeBot";
+    let footer = "CafeBot v0.4.4: https://github.com/JustAnotherStrange/CafeBot";
     match args.rest() {
         "" => {
             let response = "__Commands:__
@@ -52,7 +52,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 .await?;
         }
         "admin" => {
-            if is_admin(ctx, msg) {
+            if is_admin(ctx, msg).await {
                 let response = "__Commands:__
                 `^admin_test` - test if you are an admin
                 `^status [string]` - change the bot's status (will display as 'Playing [entered status]')

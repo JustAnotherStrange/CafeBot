@@ -1,5 +1,5 @@
 // rock paper scissors game
-use crate::database::database::{money_increment, get_money};
+use crate::database::database::{get_money, money_increment};
 use rand::{thread_rng, Rng};
 use rusqlite::Error;
 use serenity::{
@@ -93,11 +93,17 @@ async fn rockpaperscissors(ctx: &Context, msg: &Message, mut args: Args) -> Comm
 }
 fn win(msg: &Message, comp_move: &str, to_increment: i32) -> Result<String, Error> {
     money_increment(&msg.author, to_increment)?;
-    return Ok(format!("I picked {} - you win! You got **{}** monies.", comp_move, to_increment));
+    return Ok(format!(
+        "I picked {} - you win! You got **{}** monies.",
+        comp_move, to_increment
+    ));
 }
 fn lose(msg: &Message, comp_move: &str, to_subtract: i32) -> Result<String, Error> {
     money_increment(&msg.author, -to_subtract)?;
-    return Ok(format!("I picked {} - you lose! You lost **{}** monies.", comp_move, to_subtract));
+    return Ok(format!(
+        "I picked {} - you lose! You lost **{}** monies.",
+        comp_move, to_subtract
+    ));
 }
 fn tie(comp_move: &str) -> Result<String, Error> {
     return Ok(format!("I picked {} - tie!", comp_move));

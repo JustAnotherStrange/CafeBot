@@ -23,6 +23,12 @@ pub fn db_init() -> Result<()> {
     id int not null unique, date text not null, streak int not null)",
         [],
     )?;
+    // count
+    conn.execute(
+        "create table if not exists count(
+    guild_id int not null, count int not null)",
+        [],
+    )?;
     Ok(())
 }
 pub fn gen_connection() -> Connection {
