@@ -55,10 +55,10 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
                     .expect("failed to write content to daily file");
                 let days = amount_of_lines + 1;
                 let to_increment: i32;
-                if days <= 10 {
+                if days <= 50 {
                     to_increment = days as i32 * 10;
                 } else {
-                    to_increment = 100;
+                    to_increment = 500;
                 };
                 money_increment(&msg.author, to_increment)?;
                 let response = format!(

@@ -56,7 +56,7 @@ async fn give_money(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
             return Ok(());
         }
     };
-    if amount > get_money(&msg.author)? {
+    if amount > get_money(&msg.author)? || amount < 0 {
         msg.reply(&ctx.http, "You can't give more money than you have.")
             .await?;
         return Ok(());
