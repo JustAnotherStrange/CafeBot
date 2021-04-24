@@ -18,7 +18,7 @@ async fn coin_flip(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             return Ok(());
         }
     };
-    if bet > get_money(&msg.author)? {
+    if bet > get_money(&msg.author)? || bet < 0 {
         msg.reply(&ctx.http, "You can't bet more money than you have.")
             .await?;
         return Ok(());

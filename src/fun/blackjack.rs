@@ -1,30 +1,40 @@
-use rand::seq::SliceRandom;
-use rand::thread_rng;
+use crate::database::database::{get_money, money_increment};
+use rand::{seq::SliceRandom, thread_rng};
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
     prelude::*,
     Error,
 };
-use std::thread::sleep;
-use std::time;
+use std::{thread::sleep, time, time::Duration};
 
 #[command]
 #[only_in(guilds)]
 async fn blackjack(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    let title = args.rest();
+    let bet: i32 = match args.rest().trim().parse() {
+        Ok(x) => x,
+        Err(_) => {
+            msg.reply(&ctx.http, "Please enter an amount to bet as an argument.")
+                .await?;
+            return Ok(());
+        }
+    };
+    if bet > get_money(&msg.author)? || bet < 0 {
+        msg.reply(&ctx.http, "You can't bet more money than you have.")
+            .await?;
+        return Ok(());
+    }
     let mut message = msg
         .channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
-                e.title(&title);
-                e.description("react to this!");
+                e.title("Loading...");
                 e
             });
             m
         })
         .await?;
-    blackjack_engine(ctx, &mut message).await?;
+    blackjack_engine(ctx, &mut message, msg, bet).await?;
     Ok(())
 }
 
@@ -41,10 +51,14 @@ async fn edit_embed(ctx: &Context, msg: &mut Message, title: &str, description: 
 }
 
 // game
-async fn blackjack_engine(ctx: &Context, message: &mut Message) -> Result<(), Error> {
+async fn blackjack_engine(
+    ctx: &Context,
+    message: &mut Message,
+    msg: &Message,
+    bet: i32,
+) -> Result<(), Error> {
     let quarter_second = time::Duration::from_millis(250);
     let mut deck = deckgen();
-
     // deal
     let mut hand1: Vec<usize> = Vec::new();
     let mut hand2: Vec<usize> = Vec::new();
@@ -68,7 +82,11 @@ async fn blackjack_engine(ctx: &Context, message: &mut Message) -> Result<(), Er
         // player turn
         while !stay {
             // edit_embed(ctx, message, new_title.as_str(), "Hit or stay?").await;
-            if let Some(reaction) = message.await_reaction(&ctx).await {
+            if let Some(reaction) = message
+                .await_reaction(&ctx)
+                .timeout(Duration::from_secs(60))
+                .await
+            {
                 // By default, the collector will collect only added reactions
                 // We could also pattern-match the reaction in case we want
                 // to handle added or removed reactions.
@@ -105,6 +123,15 @@ async fn blackjack_engine(ctx: &Context, message: &mut Message) -> Result<(), Er
                     }
                     _ => {}
                 };
+            } else {
+                edit_embed(
+                    ctx,
+                    message,
+                    "Timed out.",
+                    "One minute passed with no reactions, so the game ended with no results..",
+                )
+                .await;
+                return Ok(());
             }
         }
         // outside of while loop, stayed
@@ -122,12 +149,12 @@ async fn blackjack_engine(ctx: &Context, message: &mut Message) -> Result<(), Er
             } else {
                 edit_embed(ctx, message, "Bust!", "Bust").await; // maybe remove this and put into description of the win?
                                                                  // maybe stop winning/losing functions entirely?
-                dealer_win(ctx, message, hand1.clone(), hand2.clone()).await;
+                dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
                 break;
             }
         } else if sum1 == 21 {
             edit_embed(ctx, message, "Blackjack", "Blackjack").await;
-            player_win(ctx, message, hand1.clone(), hand2.clone()).await;
+            player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
             break;
         }
         // dealer turn
@@ -139,12 +166,13 @@ async fn blackjack_engine(ctx: &Context, message: &mut Message) -> Result<(), Er
             edit_embed(ctx, message, new_title.as_str(), "Dealer's turn.").await;
         } else if sum2 >= 17 {
             edit_embed(ctx, message, "The dealer stays.", "The dealer stays.").await;
+            sleep(quarter_second);
             if stay {
-                edit_embed(ctx, message, "You stayed... testing.", "test").await;
+                // edit_embed(ctx, message, "You stayed... testing.", "test").await;
                 match testwin(hand1.clone(), hand2.clone()) {
-                    "win" => player_win(ctx, message, hand1.clone(), hand2.clone()).await,
+                    "win" => player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await,
                     "lose" => {
-                        dealer_win(ctx, message, hand1.clone(), hand2.clone()).await
+                        dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await
                     }
                     "tie" => tie(ctx, message, hand1, hand2).await,
                     _ => {}
@@ -158,12 +186,20 @@ async fn blackjack_engine(ctx: &Context, message: &mut Message) -> Result<(), Er
         // sum1 = hand1.iter().sum();
         sum2 = hand2.iter().sum();
         if sum2 > 21 {
-            edit_embed(ctx, message, "Dealer bust!", "Dealer bust!").await;
-            player_win(ctx, message, hand1.clone(), hand2.clone()).await;
+            edit_embed(ctx, message, "The dealer bust!", "The dealer bust!").await;
+            sleep(quarter_second);
+            player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
             break;
         } else if sum2 == 21 {
-            edit_embed(ctx, message, "Dealer blackjack!", "Dealer blackjack!").await;
-            dealer_win(ctx, message, hand1.clone(), hand2.clone()).await;
+            edit_embed(
+                ctx,
+                message,
+                "The dealer got a blackjack!",
+                "The dealer got a blackjack!",
+            )
+            .await;
+            sleep(quarter_second);
+            dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
             break;
         }
         sleep(quarter_second);
@@ -231,7 +267,14 @@ fn testwin(hand1: Vec<usize>, hand2: Vec<usize>) -> &'static str {
     "tie"
 }
 
-async fn player_win(ctx: &Context, message: &mut Message, hand1: Vec<usize>, hand2: Vec<usize>) {
+async fn player_win(
+    ctx: &Context,
+    message: &mut Message,
+    msg: &Message,
+    hand1: Vec<usize>,
+    hand2: Vec<usize>,
+    bet: i32,
+) {
     edit_embed(
         ctx,
         message,
@@ -239,9 +282,19 @@ async fn player_win(ctx: &Context, message: &mut Message, hand1: Vec<usize>, han
         &*format_game_status(None, hand1.clone(), hand2.clone(), true),
     )
     .await;
+    money_increment(&msg.author, bet).unwrap();
+    let response = format!("You won **{}** monies.", bet);
+    msg.reply(&ctx.http, response).await.unwrap();
 }
 
-async fn dealer_win(ctx: &Context, message: &mut Message, hand1: Vec<usize>, hand2: Vec<usize>) {
+async fn dealer_win(
+    ctx: &Context,
+    message: &mut Message,
+    msg: &Message,
+    hand1: Vec<usize>,
+    hand2: Vec<usize>,
+    bet: i32,
+) {
     edit_embed(
         ctx,
         message,
@@ -249,13 +302,11 @@ async fn dealer_win(ctx: &Context, message: &mut Message, hand1: Vec<usize>, han
         &*format_game_status(None, hand1.clone(), hand2.clone(), true),
     )
     .await;
+    money_increment(&msg.author, -bet).unwrap();
+    let response = format!("You lost **{}** monies.", bet);
+    msg.reply(&ctx.http, response).await.unwrap();
 }
-async fn tie(
-    ctx: &Context,
-    message: &mut Message,
-    hand1: Vec<usize>,
-    hand2: Vec<usize>,
-) {
+async fn tie(ctx: &Context, message: &mut Message, hand1: Vec<usize>, hand2: Vec<usize>) {
     edit_embed(
         ctx,
         message,
