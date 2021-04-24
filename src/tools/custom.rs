@@ -1,4 +1,5 @@
 // Make, list, delete, and run custom commands that are unique to each server
+use crate::admin::admin_test::is_admin;
 use crate::database::database::{db_init, gen_connection};
 use crate::sarcastify;
 use owoify_rs::{Owoifiable, OwoifyLevel};
@@ -8,7 +9,6 @@ use serenity::{
     model::prelude::*,
     prelude::*,
 };
-use crate::admin::admin_test::is_admin;
 
 #[command]
 #[only_in(guilds)]
@@ -38,7 +38,8 @@ async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // only gets here if the command does not already exist
     let command_output = args.rest().to_string(); // the rest of the arguments, which does not include the first word (because that was taken out earlier)
     let conn = gen_connection(); // generate sqlite connection
-    conn.execute( // add new command to database
+    conn.execute(
+        // add new command to database
         "insert or ignore into customs values (?1, ?2, ?3)",
         params![guildid, command_name, command_output],
     )?;
@@ -74,7 +75,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // list commands
     if to_run == "list" {
         let commands = get_list_of_commands(guildid); // get formatted list of commands from function
-        // send the list in a nice embed
+                                                      // send the list in a nice embed
         msg.channel_id
             .send_message(&ctx.http, |m| {
                 m.content("**Custom commands for this server:**");
@@ -93,9 +94,13 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         Some(x) => x,
         None => {
             // Command doesn't exist
-            msg.reply(&ctx.http, "That command doesn't exist yet. Create it with `^custom`.").await?;
+            msg.reply(
+                &ctx.http,
+                "That command doesn't exist yet. Create it with `^custom`.",
+            )
+            .await?;
             return Ok(());
-        },
+        }
     };
 
     // check if there is a second argument
@@ -112,9 +117,16 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     return if second_args == "delete" {
         // delete a command if the user is an admin
         if is_admin(ctx, msg).await {
-            conn.execute("delete from customs where guild_id = ?1 and name = ?2", params![guildid, to_run])?;
+            conn.execute(
+                "delete from customs where guild_id = ?1 and name = ?2",
+                params![guildid, to_run],
+            )?;
         } else {
-            msg.reply(&ctx.http, "You aren't an admin, so you can't delete messages.").await?;
+            msg.reply(
+                &ctx.http,
+                "You aren't an admin, so you can't delete messages.",
+            )
+            .await?;
         }
         Ok(())
     } else if second_args == "|" {
@@ -206,19 +218,25 @@ fn get_command_output(guildid: u64, command_name: String) -> Option<String> {
 // Get and format a list of all commands.
 fn get_list_of_commands(guildid: u64) -> String {
     let conn = gen_connection();
-    let mut statement = conn.prepare("select * from customs where guild_id = ?1").unwrap();
-    let rows: Option<String> = statement
-        .query_row(params![guildid], |row| Ok(row.get(1)?))
-        .optional()
+    // Iterate over the rows and push each one's `name` with nice formatting.
+
+    let mut stmt = conn
+        .prepare("select * from customs where guild_id = ?1")
         .unwrap();
+    let rows = stmt.query_map(params![guildid], |row| row.get(1)).unwrap();
+    let mut commands_vec: Vec<String> = Vec::new();
+    for command_result in rows {
+        commands_vec.push(command_result.unwrap());
+    }
+
     let mut commands = String::new();
     let mut i = 1;
-    // Iterate over the rows and push each one's `name` with nice formatting.
-    for command in rows {
+
+    for command in commands_vec.iter() {
         let to_push = format!("{}: **{}**\n", i, command);
         commands.push_str(to_push.as_str());
         i += 1;
     }
+
     return commands;
 }
-
