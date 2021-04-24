@@ -24,7 +24,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             `^owo` - modify your message to be owoified.
             `^daily` - run this daily to maintain a streak. forgetting one day will result in a reset.
             `^xkcd` - get xkcd comics. run with no arguments for the latest, 'random' for a random comic, or a number of the specific one you want.
-            `^rockpaperscissors [^rps]` - play rock paper scissors! Example: ^rps rock
+            `^rockpaperscissors [^rps] [move] [bet]` - play rock paper scissors! Example: ^rps rock 50
             `^wiki [search term]` - search wikipedia
             `^dice [^d]` - roll dice using the standard dnd syntax; supports bonuses.
             `^custom` - create a custom command. e.g. '^custom bruh bruh moment'.
