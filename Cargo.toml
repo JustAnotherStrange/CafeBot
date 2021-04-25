@@ -1,6 +1,6 @@
 [package]
 name = "CafeBot"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["justanotherstrange"]
 edition = "2018"
 

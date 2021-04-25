@@ -28,29 +28,25 @@ async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
-async fn balder(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    let mut a = args;
-    let hairlevel = thread_rng().gen_bool(0.5);
+async fn balder(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    let hairlevel: f64 = (thread_rng().gen_range(0..101) / 10) as f64;
+    let who_is_balder = thread_rng().gen_bool(0.5);
 
-    if a.len() != 2 {
+    if args.len() != 2 {
         msg.reply(
             &ctx.http,
-            "Please send two people to compare their baldness. :^)
-Eg: `^balder @GamerPaul @UnorigionalLeon`",
+            "Please send two people to compare their baldness, e.g. `^balder @GamerPaul @UnorigionalLeon`",
         )
         .await?;
         return Ok(());
     }
-
-    let response = MessageBuilder::new()
-        .push_bold_safe(if hairlevel {
-            a.current().unwrap()
-        } else {
-            a.advance();
-            a.current().unwrap()
-        }) // use the arguments for the person to be tested
-        .push(" has less hair (aka balder)")
-        .build();
+    let person1 = args.single::<String>()?;
+    let person2 = args.single::<String>()?;
+    let response = if who_is_balder {
+        format!("{} is **{}x** balder than {}.", person1, hairlevel, person2)
+    } else {
+        format!("{} is **{}x** balder than {}.", person2, hairlevel, person1)
+    };
     msg.reply(&ctx.http, &response).await?;
     Ok(())
 }
