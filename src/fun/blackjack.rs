@@ -71,7 +71,7 @@ async fn blackjack_engine(
     let mut sum2: usize = hand2.iter().sum();
     let mut stay = false;
     let new_title = format_game_status(None, hand1.clone(), hand2.clone(), false);
-    edit_embed(ctx, message, new_title.as_str(), "react to this!").await;
+    edit_embed(ctx, message, new_title.as_str(), "Hit or stay? (React)").await;
     // reactions
     let letters: Vec<char> = vec!['✋', '🛑'];
     for letter in letters.iter() {
@@ -115,7 +115,7 @@ async fn blackjack_engine(
                         }
                         let new_title =
                             format_game_status(None, hand1.clone(), hand2.clone(), false);
-                        edit_embed(ctx, message, new_title.as_str(), "hit or stay (react)").await;
+                        edit_embed(ctx, message, new_title.as_str(), "Hit or stay? (React)").await;
                     }
                     "🛑" => {
                         // stay
@@ -128,7 +128,7 @@ async fn blackjack_engine(
                     ctx,
                     message,
                     "Timed out.",
-                    "One minute passed with no reactions, so the game ended with no results..",
+                    "One minute passed with no reactions, so the game ended with no results.",
                 )
                 .await;
                 return Ok(());
@@ -147,13 +147,14 @@ async fn blackjack_engine(
                     }
                 }
             } else {
-                edit_embed(ctx, message, "Bust!", "Bust").await; // maybe remove this and put into description of the win?
-                                                                 // maybe stop winning/losing functions entirely?
+                edit_embed(ctx, message, "Bust!", "Bust").await;
+                sleep(Duration::from_millis(500));
                 dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
                 break;
             }
         } else if sum1 == 21 {
-            edit_embed(ctx, message, "Blackjack", "Blackjack").await;
+            edit_embed(ctx, message, "Blackjack!", "Blackjack!").await;
+            sleep(Duration::from_millis(500));
             player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
             break;
         }
