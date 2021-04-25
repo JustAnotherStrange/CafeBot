@@ -153,7 +153,7 @@ async fn blackjack_engine(
         } else if sum1 == 21 {
             edit_embed(ctx, message, "Blackjack!", "Blackjack!").await;
             sleep(Duration::from_millis(500));
-            player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
+            player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet * 2).await;
             break;
         }
         // dealer turn
