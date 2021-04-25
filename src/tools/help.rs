@@ -9,7 +9,7 @@ use serenity::{
 #[command]
 async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // build the message
-    let footer = "CafeBot v0.5.2: https://github.com/JustAnotherStrange/CafeBot";
+    let footer = "CafeBot v0.6.0: https://github.com/JustAnotherStrange/CafeBot";
     match args.rest() {
         "" => {
             let response = "__Commands:__
@@ -35,7 +35,8 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             `^wallet` - see how much money you have.
             `^coin_flip [bet]` - flip a coin for money.
             `^give_money [^give] [amount] [recipient]` - give money to someone.
-            `^blackjack [bet]` - play blackjack for money.";
+            `^blackjack [bet]` - play blackjack for money.
+            `^leaderboard` - get a leaderboard of who has the most money.";
             // send commands as an embed
             msg.channel_id
                 .send_message(&ctx.http, |m| {

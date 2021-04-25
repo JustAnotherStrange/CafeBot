@@ -20,7 +20,7 @@ use fun::{
     zote::*,
 };
 use message_change::{owo::*, sarcasm::*, say::*};
-use money::{coin_flip::*, give::*, money::*};
+use money::{coin_flip::*, give::*, money::*, leaderboard::*};
 use tools::{custom::*, help::*, latency::*, ping::*};
 
 mod admin;
@@ -65,7 +65,8 @@ struct Handler;
     money,
     coin_flip,
     give_money,
-    blackjack
+    blackjack,
+    leaderboard
 )]
 
 struct General;

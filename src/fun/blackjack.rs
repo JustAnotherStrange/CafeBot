@@ -24,28 +24,34 @@ async fn blackjack(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .await?;
         return Ok(());
     }
-    let response = format!("**{}** bet **{}** monies on blackjack.", &msg.author.name, bet);
+    let response = format!(
+        "**{}** bet **{}** monies on blackjack.",
+        &msg.author.name, bet
+    );
     let mut message = msg.reply(&ctx.http, &response).await?;
-    message.edit(&ctx, |m| {
-        m.embed(|e| {
-            e.title("Loading...");
-            e
+    message
+        .edit(&ctx, |m| {
+            m.embed(|e| {
+                e.title("Loading...");
+                e
+            })
         })
-    }).await?;
+        .await?;
     blackjack_engine(ctx, &mut message, msg, bet).await?;
     Ok(())
 }
 
 async fn edit_embed(ctx: &Context, message: &mut Message, title: &str, description: &str) {
-    message.edit(&ctx, |m| {
-        m.embed(|e| {
-            e.title(&title);
-            e.description(&description);
-            e
+    message
+        .edit(&ctx, |m| {
+            m.embed(|e| {
+                e.title(&title);
+                e.description(&description);
+                e
+            })
         })
-    })
-    .await
-    .unwrap();
+        .await
+        .unwrap();
 }
 
 // game
