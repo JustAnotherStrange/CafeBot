@@ -18,6 +18,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             `^say` - repeat anything that comes after this command
             `^count` - count as high as you can
             `^hair [^bald]` - see how bald you are.
+            `^balder [person1] [person2]` - compare 2 people to see how bald they are
             `^zote` - find precepts of zote. ^zote [number] for a specific precept, ^zote random for a random one, and ^zote bald for our own precept.
             `^bruh` - get a random bruh emote
             `^latency` - see latency to bot host.

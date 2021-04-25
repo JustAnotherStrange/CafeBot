@@ -45,6 +45,7 @@ struct Handler;
     ping,
     count,
     hair,
+    balder,
     help,
     zote,
     sarcasm,

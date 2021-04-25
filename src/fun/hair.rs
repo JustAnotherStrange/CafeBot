@@ -26,3 +26,31 @@ async fn hair(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     msg.reply(&ctx.http, &response).await?;
     Ok(())
 }
+
+#[command]
+async fn balder(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let mut a = args;
+    let hairlevel = thread_rng().gen_bool(0.5);
+
+    if a.len() != 2 {
+        msg.reply(
+            &ctx.http,
+            "Please send two people to compare their baldness. :^)
+Eg: `^balder @GamerPaul @UnorigionalLeon`",
+        )
+        .await?;
+        return Ok(());
+    }
+
+    let response = MessageBuilder::new()
+        .push_bold_safe(if hairlevel {
+            a.current().unwrap()
+        } else {
+            a.advance();
+            a.current().unwrap()
+        }) // use the arguments for the person to be tested
+        .push(" has less hair (aka balder)")
+        .build();
+    msg.reply(&ctx.http, &response).await?;
+    Ok(())
+}
