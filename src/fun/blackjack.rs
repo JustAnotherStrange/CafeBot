@@ -112,7 +112,7 @@ async fn blackjack_engine(
                     .unwrap()
                     .user(&ctx)
                     .await?;
-                if reactor == msg.author {
+                if reactor != msg.author {
                     break 'main;
                 }
                 // match on the reacted emoji
