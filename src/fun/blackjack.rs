@@ -8,6 +8,7 @@ use serenity::{
     prelude::*,
     Error,
 };
+use std::sync::Arc;
 use std::{thread::sleep, time, time::Duration};
 
 #[command]
@@ -97,7 +98,7 @@ async fn blackjack_engine(
     let mut stay = false;
 
     // large loop, where the gameplay happens
-    '_main: loop {
+    'main: loop {
         // player turn
         '_not_stay: while !stay {
             // await reactions and then match on them
@@ -107,7 +108,13 @@ async fn blackjack_engine(
                 .await
             {
                 let emoji = &reaction.as_inner_ref().emoji;
-
+                let reactor = Arc::try_unwrap(reaction.as_inner_ref().clone())
+                    .unwrap()
+                    .user(&ctx)
+                    .await?;
+                if reactor == msg.author {
+                    break 'main;
+                }
                 // match on the reacted emoji
                 let _ = match emoji.as_data().as_str() {
                     // hit!
@@ -147,11 +154,13 @@ async fn blackjack_engine(
                 };
             } else {
                 // gets here if there were no reactions for 60 seconds.
+                let new_description = format!("One minute passed with no reactions, so the game ended with no results. As a result, you lost your bet, which was **{}** monies.", bet);
+                money_increment(&msg.author, -bet).unwrap();
                 edit_embed(
                     ctx,
                     message,
                     "Timed out.",
-                    "One minute passed with no reactions, so the game ended with no results.",
+                    &*new_description,
                 )
                 .await;
                 return Ok(()); // end the game
