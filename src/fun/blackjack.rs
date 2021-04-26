@@ -8,7 +8,6 @@ use serenity::{
     prelude::*,
     Error,
 };
-use std::sync::Arc;
 use std::{thread::sleep, time, time::Duration};
 
 #[command]
@@ -98,9 +97,9 @@ async fn blackjack_engine(
     let mut stay = false;
 
     // large loop, where the gameplay happens
-    'main: loop {
+    '_main: loop {
         // player turn
-        '_not_stay: while !stay {
+        'not_stay: while !stay {
             // await reactions and then match on them
             if let Some(reaction) = message
                 .await_reaction(&ctx)
@@ -108,12 +107,9 @@ async fn blackjack_engine(
                 .await
             {
                 let emoji = &reaction.as_inner_ref().emoji;
-                let reactor = Arc::try_unwrap(reaction.as_inner_ref().clone())
-                    .unwrap()
-                    .user(&ctx)
-                    .await?;
-                if reactor != msg.author {
-                    break 'main;
+                let reacted = &*reaction.as_inner_ref().clone();
+                if reacted.user(&ctx).await? != msg.author {
+                    continue 'not_stay;
                 }
                 // match on the reacted emoji
                 let _ = match emoji.as_data().as_str() {
