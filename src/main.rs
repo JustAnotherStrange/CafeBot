@@ -133,7 +133,11 @@ async fn main() {
         std::fs::File::create("data.db").unwrap(); // create the db if it doesn't already exist
     }
     db_init().unwrap();
-    if let Err(why) = client.start().await {
+    let client_future = client.start();
+    let cron_future = money::interest::start_interest();
+
+    // run simultaneously
+    if let (Err(why), ()) = tokio::join!(client_future, cron_future) {
         println!("Client error: {:?}", why);
     }
 }
