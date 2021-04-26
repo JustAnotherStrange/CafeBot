@@ -62,16 +62,14 @@ async fn get_leaderboard(choice: String) -> Result<Vec<Leader>, ()> {
     let mut stmt = match choice.as_str() {
         "money" => {
             num_column = 1;
-            conn
-                .prepare("select * from users order by money desc")
+            conn.prepare("select * from users order by money desc")
                 .unwrap()
-        },
+        }
         "daily" => {
             num_column = 2;
-            conn
-                .prepare("select * from daily order by streak desc")
+            conn.prepare("select * from daily order by streak desc")
                 .unwrap()
-        },
+        }
         _ => return Err(()),
     };
 

@@ -151,7 +151,7 @@ async fn blackjack_engine(
             } else {
                 // gets here if there were no reactions for 60 seconds.
                 let new_description = format!("One minute passed with no reactions, so the game ended with no results. As a result, you lost your bet, which was **{}** monies.", bet);
-                money_increment(&msg.author, -bet).unwrap();
+                money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), -bet).unwrap();
                 edit_embed(ctx, message, "Timed out.", &*new_description).await;
                 return Ok(()); // end the game
             }
@@ -332,7 +332,7 @@ async fn player_win(
         &*format_game_status(None, hand1.clone(), hand2.clone(), true),
     )
     .await;
-    money_increment(&msg.author, bet).unwrap();
+    money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), bet).unwrap();
     let response = format!("You won **{}** monies.", bet);
     msg.reply(&ctx.http, response).await.unwrap();
 }
@@ -352,7 +352,7 @@ async fn dealer_win(
         &*format_game_status(None, hand1.clone(), hand2.clone(), true),
     )
     .await;
-    money_increment(&msg.author, -bet).unwrap();
+    money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), -bet).unwrap();
     let response = format!("You lost **{}** monies.", bet);
     msg.reply(&ctx.http, response).await.unwrap();
 }

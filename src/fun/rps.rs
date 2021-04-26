@@ -92,14 +92,22 @@ async fn rockpaperscissors(ctx: &Context, msg: &Message, mut args: Args) -> Comm
     Ok(())
 }
 fn win(msg: &Message, comp_move: &str, to_increment: i32) -> Result<String, Error> {
-    money_increment(&msg.author, to_increment)?;
+    money_increment(
+        &msg.author,
+        msg.guild_id.unwrap().as_u64().clone(),
+        to_increment,
+    )?;
     return Ok(format!(
         "I picked {} - you win! You got **{}** monies.",
         comp_move, to_increment
     ));
 }
 fn lose(msg: &Message, comp_move: &str, to_subtract: i32) -> Result<String, Error> {
-    money_increment(&msg.author, -to_subtract)?;
+    money_increment(
+        &msg.author,
+        msg.guild_id.unwrap().as_u64().clone(),
+        -to_subtract,
+    )?;
     return Ok(format!(
         "I picked {} - you lose! You lost **{}** monies.",
         comp_move, to_subtract
