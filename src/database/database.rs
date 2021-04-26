@@ -8,7 +8,7 @@ pub fn db_init() -> Result<()> {
     // the UNIQUE on the id column is so u can test to see if it already exists or not (see create_user function)
     conn.execute(
         "create table if not exists users(
-    id int not null unique, money int not null)",
+    id int not null unique, money int not null, tickets int not null)",
         [],
     )?;
     // customs table
@@ -39,20 +39,19 @@ pub fn db_init() -> Result<()> {
 pub fn gen_connection() -> Connection {
     Connection::open("data.db").expect("failed to open database")
 }
-pub fn create_user_if_not_exist(user: &User) -> Result<()> {
-    let conn = gen_connection();
+pub fn create_user_if_not_exist(user: &User, conn: &Connection) -> Result<()> {
     // insert if not already exists
     conn.execute(
-        "insert or ignore into users values (?1, ?2)",
-        params![user.id.as_u64(), 10],
+        "insert or ignore into users values (?1, ?2, ?3)",
+        params![user.id.as_u64(), 10, 0],
     )?;
     Ok(())
 }
 pub fn money_increment(user: &User, guild_id: u64, amount: i32) -> Result<()> {
     let conn = gen_connection();
-    create_user_if_not_exist(&user)?;
+    create_user_if_not_exist(&user, &conn)?;
     if amount.is_negative() {
-        pool_increment(guild_id, amount / -2)?;
+        pool_increment(guild_id, amount / -2, &conn)?;
     }
     conn.execute(
         "update users set money = money + ?1 where id = ?2",
@@ -61,10 +60,12 @@ pub fn money_increment(user: &User, guild_id: u64, amount: i32) -> Result<()> {
     Ok(())
 }
 
-fn pool_increment(guild_id: u64, amount: i32) -> Result<()> {
-    let conn = gen_connection();
+fn pool_increment(guild_id: u64, amount: i32, conn: &Connection) -> Result<()> {
     // create guild row if not exist
-    conn.execute("insert or ignore into pool values (?1, 0)", params![guild_id])?;
+    conn.execute(
+        "insert or ignore into pool values (?1, 0)",
+        params![guild_id],
+    )?;
     // increment
     conn.execute(
         "update pool set amount = amount + ?1 where guild_id = ?2",
@@ -74,7 +75,10 @@ fn pool_increment(guild_id: u64, amount: i32) -> Result<()> {
 }
 pub fn get_pool(guild_id: u64) -> Result<u64> {
     let conn = gen_connection();
-    conn.execute("insert or ignore into pool values (?1, 0)", params![guild_id])?;
+    conn.execute(
+        "insert or ignore into pool values (?1, 0)",
+        params![guild_id],
+    )?;
     let money = conn.query_row(
         "select amount from pool where guild_id = ?1",
         params![guild_id],
@@ -84,7 +88,7 @@ pub fn get_pool(guild_id: u64) -> Result<u64> {
 }
 pub fn get_money(user: &User) -> Result<i32> {
     let conn = gen_connection();
-    create_user_if_not_exist(&user)?;
+    create_user_if_not_exist(&user, &conn)?;
     // let mut stmt = conn.prepare("select money from users where id = ?1")?;
     let money = conn.query_row(
         "select money from users where id = ?1",

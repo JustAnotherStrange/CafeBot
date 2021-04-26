@@ -51,7 +51,7 @@ async fn blackjack(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 // Edits the embed with a new title and a new description.
-async fn edit_embed(ctx: &Context, message: &mut Message, title: &str, description: &str) {
+pub async fn edit_embed(ctx: &Context, message: &mut Message, title: &str, description: &str) {
     message
         .edit(&ctx, |m| {
             m.embed(|e| {
