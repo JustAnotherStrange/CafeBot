@@ -1,6 +1,6 @@
 use serenity::{
     client::Context,
-    framework::standard::{macros::command, CommandResult},
+    framework::standard::{macros::command, Args, CommandResult},
     model::{channel::Message, id::UserId, misc::Mentionable},
 };
 
@@ -9,21 +9,35 @@ use crate::database::database::gen_connection;
 #[derive(Debug)]
 struct Leader {
     id: u64,
-    money: i64,
+    amount: i64,
 }
 
 #[command]
-async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
+async fn leaderboard(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // let mut stmt = conn.prepare("select money from users where id = ?1")?;
-    let leader_vec = get_leaderboard().await;
+    let choice = match args.single::<String>() {
+        Ok(x) => x,
+        Err(_) => {
+            // No arguments
+            msg.reply(&ctx.http, "Please enter in this syntax: `^leaderboard [choice]`. The available leaderboards are `money` and `daily`.")
+                .await?;
+            return Ok(());
+        }
+    };
+    let leader_vec = get_leaderboard(choice.clone()).await.unwrap();
     let mut response = String::new();
     let mut index = 1;
     for cur in leader_vec {
         let to_push = format!(
-            "#{}: {}: **{}** monies\n",
+            "#{}: {}: **{}** {}\n",
             index,
             UserId::from(cur.id).mention(),
-            cur.money
+            cur.amount,
+            match choice.clone().as_str() {
+                "money" => "monies",
+                "daily" => "days",
+                _ => "errors",
+            }
         );
         index += 1;
         response.push_str(&*to_push);
@@ -40,17 +54,26 @@ async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
-async fn get_leaderboard() -> Vec<Leader> {
+async fn get_leaderboard(choice: String) -> Result<Vec<Leader>, ()> {
     let conn = gen_connection();
+
+    // match argument to what statement to prepare
+    let mut stmt = match choice.as_str() {
+        "money" => conn
+            .prepare("select * from users order by money desc")
+            .unwrap(),
+        "daily" => conn
+            .prepare("select * from daily order by streak desc")
+            .unwrap(),
+        _ => return Err(()),
+    };
+
     // Iterate over the rows and push each one's `name` with nice formatting.
-    let mut stmt = conn
-        .prepare("select * from users order by money desc")
-        .unwrap();
     let rows = stmt
         .query_map([], |row| {
             Ok(Leader {
                 id: row.get(0).unwrap(),
-                money: row.get(1).unwrap(),
+                amount: row.get(2).unwrap(),
             })
         })
         .unwrap();
@@ -59,5 +82,5 @@ async fn get_leaderboard() -> Vec<Leader> {
         leader_vec.push(leader.unwrap());
     }
 
-    return leader_vec;
+    return Ok(leader_vec);
 }

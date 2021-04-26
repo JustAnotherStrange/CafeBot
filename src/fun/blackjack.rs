@@ -152,13 +152,7 @@ async fn blackjack_engine(
                 // gets here if there were no reactions for 60 seconds.
                 let new_description = format!("One minute passed with no reactions, so the game ended with no results. As a result, you lost your bet, which was **{}** monies.", bet);
                 money_increment(&msg.author, -bet).unwrap();
-                edit_embed(
-                    ctx,
-                    message,
-                    "Timed out.",
-                    &*new_description,
-                )
-                .await;
+                edit_embed(ctx, message, "Timed out.", &*new_description).await;
                 return Ok(()); // end the game
             }
         }
@@ -204,7 +198,7 @@ async fn blackjack_engine(
             sleep(quarter_second);
             if stay {
                 // this can probably be simplified.
-                match testwin(hand1.clone(), hand2.clone()) {
+                match test_win(hand1.clone(), hand2.clone()) {
                     "win" => player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await,
                     "lose" => {
                         dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await
@@ -308,7 +302,7 @@ fn format_game_status(
 // Ending functions
 
 // This function may not be necessary. It is only called once.
-fn testwin(hand1: Vec<usize>, hand2: Vec<usize>) -> &'static str {
+fn test_win(hand1: Vec<usize>, hand2: Vec<usize>) -> &'static str {
     // true if player wins, false if computer wins
     let sum1: usize = hand1.iter().sum();
     let sum2: usize = hand2.iter().sum();
