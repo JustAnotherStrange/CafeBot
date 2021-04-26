@@ -36,7 +36,7 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             `^coin_flip [bet]` - flip a coin for money.
             `^give_money [^give] [amount] [recipient]` - give money to someone.
             `^blackjack [bet]` - play blackjack for money.
-            `^leaderboard` - get a leaderboard of who has the most money.";
+            `^leaderboard [choice]` - get a leaderboard. available options are currently 'money' and 'daily'.";
             // send commands as an embed
             msg.channel_id
                 .send_message(&ctx.http, |m| {

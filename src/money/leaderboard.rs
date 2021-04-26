@@ -58,13 +58,20 @@ async fn get_leaderboard(choice: String) -> Result<Vec<Leader>, ()> {
     let conn = gen_connection();
 
     // match argument to what statement to prepare
+    let num_column: usize;
     let mut stmt = match choice.as_str() {
-        "money" => conn
-            .prepare("select * from users order by money desc")
-            .unwrap(),
-        "daily" => conn
-            .prepare("select * from daily order by streak desc")
-            .unwrap(),
+        "money" => {
+            num_column = 1;
+            conn
+                .prepare("select * from users order by money desc")
+                .unwrap()
+        },
+        "daily" => {
+            num_column = 2;
+            conn
+                .prepare("select * from daily order by streak desc")
+                .unwrap()
+        },
         _ => return Err(()),
     };
 
@@ -73,7 +80,7 @@ async fn get_leaderboard(choice: String) -> Result<Vec<Leader>, ()> {
         .query_map([], |row| {
             Ok(Leader {
                 id: row.get(0).unwrap(),
-                amount: row.get(2).unwrap(),
+                amount: row.get(num_column).unwrap(),
             })
         })
         .unwrap();
