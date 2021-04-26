@@ -135,7 +135,9 @@ async fn main() {
     db_init().unwrap();
     let client_future = client.start();
     let cron_future = money::interest::start_interest();
-    if let Err(why) = tokio::try_join!(client_future, cron_future) {
+
+    // run simultaneously
+    if let (Err(why), ()) = tokio::join!(client_future, cron_future) {
         println!("Client error: {:?}", why);
     }
 }
