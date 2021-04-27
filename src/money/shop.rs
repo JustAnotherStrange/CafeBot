@@ -57,7 +57,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                 "🎫" => {
                     match purchase(&msg.author, ticket_price).await {
                         Ok(_) => {
-                            if get_amount_of_tickets(&msg.author) >= 5 {
+                            if get_amount_of_tickets(&msg.author, &conn)? >= 5 {
                                 edit_embed(
                                     &ctx,
                                     &mut message,
