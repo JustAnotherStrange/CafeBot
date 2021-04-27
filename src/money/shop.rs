@@ -24,13 +24,13 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
             })
         })
         .await?;
-    let letters: Vec<char> = vec!['🎫']; // ticket
+    let letters: Vec<char> = vec!['🎫', '🛑']; // ticket
     for letter in letters.iter() {
         message.react(ctx, *letter).await?;
     }
     let ticket_amnt = get_amount_of_tickets(&msg.author, &conn)?;
     let ticket_price: u32 = 100 * (2_u32.pow(ticket_amnt));
-    let description = format!("{}: Ticket: {} monies\n", letters[0], ticket_price);
+    let description = format!("{}: Ticket: {} monies\n{}: Leave the shop.", letters[0], ticket_price, letters[1]);
     edit_embed(
         &ctx,
         &mut message,
@@ -63,6 +63,10 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                     );
                     edit_embed(&ctx, &mut message, "Success!", &*description).await;
                     return Ok(());
+                },
+                "🛑" => {
+                    edit_embed(&ctx, &mut message, "Goodbye!", "The shop is closed here.").await;
+                    return Ok(())
                 }
                 _ => {} // if the reaction is none of the above, then do nothing.
             }
