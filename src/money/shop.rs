@@ -57,6 +57,16 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                 "🎫" => {
                     match purchase(&msg.author, ticket_price).await {
                         Ok(_) => {
+                            if get_amount_of_tickets(&msg.author) >= 5 {
+                                edit_embed(
+                                    &ctx,
+                                    &mut message,
+                                    "You have hit the maximum amount of tickets.",
+                                    "Please wait until the next drawing to purchase more tickets.",
+                                )
+                                .await;
+                                return Ok(());
+                            }
                             conn.execute(
                                 "update users set tickets = tickets + 1 where id = ?1",
                                 params![msg.author.id.as_u64()],
@@ -68,7 +78,13 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                             edit_embed(&ctx, &mut message, "Success!", &*description).await;
                         }
                         Err(_) => {
-                            edit_embed(&ctx, &mut message, "Nice try, but you don't have enough money to buy that.", "haha poor.").await;
+                            edit_embed(
+                                &ctx,
+                                &mut message,
+                                "Nice try, but you don't have enough money to buy that.",
+                                "haha poor.",
+                            )
+                            .await;
                         }
                     };
                     return Ok(());
