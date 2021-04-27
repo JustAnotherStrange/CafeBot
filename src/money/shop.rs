@@ -55,18 +55,18 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
             // match on the reacted emoji
             match emoji.as_data().as_str() {
                 "🎫" => {
+                    if get_amount_of_tickets(&msg.author, &conn)? >= 5 {
+                        edit_embed(
+                            &ctx,
+                            &mut message,
+                            "You have hit the maximum amount of tickets.",
+                            "Please wait until the next drawing to purchase more tickets.",
+                        )
+                            .await;
+                        return Ok(());
+                    }
                     match purchase(&msg.author, ticket_price).await {
                         Ok(_) => {
-                            if get_amount_of_tickets(&msg.author, &conn)? >= 5 {
-                                edit_embed(
-                                    &ctx,
-                                    &mut message,
-                                    "You have hit the maximum amount of tickets.",
-                                    "Please wait until the next drawing to purchase more tickets.",
-                                )
-                                .await;
-                                return Ok(());
-                            }
                             conn.execute(
                                 "update users set tickets = tickets + 1 where id = ?1",
                                 params![msg.author.id.as_u64()],
