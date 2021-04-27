@@ -4,3 +4,4 @@ pub mod interest;
 pub mod leaderboard;
 pub mod money;
 pub mod pool;
+pub mod shop;
