@@ -20,7 +20,7 @@ use fun::{
     zote::*,
 };
 use message_change::{owo::*, sarcasm::*, say::*};
-use money::{coin_flip::*, give::*, leaderboard::*, lottery::*, money::*, pool::*};
+use money::{coin_flip::*, give::*, leaderboard::*, money::*, pool::*, shop::*};
 use tools::{custom::*, help::*, latency::*, ping::*};
 
 mod admin;
