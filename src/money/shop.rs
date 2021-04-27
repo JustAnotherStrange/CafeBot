@@ -1,4 +1,4 @@
-use crate::database::database::{create_user_if_not_exist, gen_connection};
+use crate::database::database::{create_user_if_not_exist, gen_connection, get_money};
 use crate::fun::blackjack::edit_embed;
 use rusqlite::{params, Connection};
 use serenity::{
@@ -55,16 +55,22 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
             // match on the reacted emoji
             match emoji.as_data().as_str() {
                 "🎫" => {
-                    purchase(&msg.author, ticket_price, &conn);
-                    conn.execute(
-                        "update users set tickets = tickets + 1 where id = ?1",
-                        params![msg.author.id.as_u64()],
-                    )?;
-                    let description = format!(
-                        "You purchased a **ticket** for **{}** monies.",
-                        ticket_price
-                    );
-                    edit_embed(&ctx, &mut message, "Success!", &*description).await;
+                    match purchase(&msg.author, ticket_price).await {
+                        Ok(_) => {
+                            conn.execute(
+                                "update users set tickets = tickets + 1 where id = ?1",
+                                params![msg.author.id.as_u64()],
+                            )?;
+                            let description = format!(
+                                "You purchased a **ticket** for **{}** monies.",
+                                ticket_price
+                            );
+                            edit_embed(&ctx, &mut message, "Success!", &*description).await;
+                        }
+                        Err(_) => {
+                            edit_embed(&ctx, &mut message, "Nice try, but you don't have enough money to buy that.", "haha poor.").await;
+                        }
+                    };
                     return Ok(());
                 }
                 "🛑" => {
@@ -94,11 +100,17 @@ pub fn get_amount_of_tickets(user: &User, conn: &Connection) -> Result<u32, rusq
     return money;
 }
 
-fn purchase(user: &User, price: u32, conn: &Connection) {
+async fn purchase(user: &User, price: u32) -> Result<(), ()> {
+    let conn = gen_connection();
     create_user_if_not_exist(&user, &conn).unwrap();
-    conn.execute(
-        "update users set money = money - ?1 where id = ?2",
-        params![price, user.id.as_u64()],
-    )
-    .unwrap();
+    return if price > get_money(user).unwrap() as u32 {
+        Err(())
+    } else {
+        conn.execute(
+            "update users set money = money - ?1 where id = ?2",
+            params![price, user.id.as_u64()],
+        )
+        .unwrap();
+        Ok(())
+    };
 }
