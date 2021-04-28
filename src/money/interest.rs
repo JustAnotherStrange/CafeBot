@@ -1,7 +1,7 @@
 // idle increasing of user's money based on their purchased amount. starts at 0.
 use crate::database::database::gen_connection;
-use tokio_cron_scheduler::{Job, JobScheduler};
 use rusqlite::{params, Error};
+use tokio_cron_scheduler::{Job, JobScheduler};
 struct Interest {
     id: u64,
     incr_amount: u64,
@@ -25,13 +25,12 @@ fn interest() -> Result<(), Error> {
     let mut stmt_incr = conn.prepare("update users set money = money + ?1 where id = ?2")?;
     let mut stmt = conn.prepare("select * from users")?;
 
-    let rows = stmt
-        .query_map([], |row| {
-            Ok(Interest {
-                id: row.get(0).unwrap(),
-                incr_amount: row.get(3).unwrap(),
-            })
-        })?;
+    let rows = stmt.query_map([], |row| {
+        Ok(Interest {
+            id: row.get(0).unwrap(),
+            incr_amount: row.get(3).unwrap(),
+        })
+    })?;
     let mut intr_vec = Vec::new();
     for intr in rows {
         intr_vec.push(intr.unwrap());

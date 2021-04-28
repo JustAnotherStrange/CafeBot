@@ -100,10 +100,12 @@ pub fn get_money(user: &User) -> Result<i32> {
 
 pub fn get_incr_amount(user: &User, conn: &Connection) -> i32 {
     // let mut stmt = conn.prepare("select money from users where id = ?1")?;
-    let money = conn.query_row(
-        "select incr_amount from users where id = ?1",
-        params![user.id.as_u64()],
-        |row| Ok(row.get(0).unwrap()),
-    ).unwrap();
+    let money = conn
+        .query_row(
+            "select incr_amount from users where id = ?1",
+            params![user.id.as_u64()],
+            |row| Ok(row.get(0).unwrap()),
+        )
+        .unwrap();
     return money;
 }

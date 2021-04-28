@@ -1,11 +1,11 @@
+use crate::database::database::{gen_connection, get_incr_amount, get_money};
+use crate::money::shop::get_amount_of_tickets;
+use serenity::http::AttachmentType;
 use serenity::{
     framework::standard::{macros::command, CommandResult},
     model::prelude::*,
     prelude::*,
 };
-use crate::database::database::{get_money, gen_connection, get_incr_amount};
-use serenity::http::AttachmentType;
-use crate::money::shop::get_amount_of_tickets;
 
 #[command]
 #[only_in(guilds)]
@@ -22,13 +22,15 @@ async fn profile(ctx: &Context, msg: &Message) -> CommandResult {
     let mut username = user.name.clone();
     match user.nick_in(&ctx, msg.guild_id.unwrap()).await {
         Some(x) => username.push_str(x.as_str()),
-        None => {},
+        None => {}
     }
-    let desc = format!("Monies: **{}**\nTickets: **{}**\nIdle increase: **{}**", money, tickets, incr_amount);
+    let desc = format!(
+        "Monies: **{}**\nTickets: **{}**\nIdle increase: **{}**",
+        money, tickets, incr_amount
+    );
 
     // send in embed
-    msg
-        .channel_id
+    msg.channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
                 e.title(&username);
@@ -39,6 +41,7 @@ async fn profile(ctx: &Context, msg: &Message) -> CommandResult {
             m.add_file(AttachmentType::Image(&pfp_link));
             m
         })
-        .await.unwrap();
+        .await
+        .unwrap();
     Ok(())
 }
