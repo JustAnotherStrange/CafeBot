@@ -1,6 +1,6 @@
-// TODO: TESTING!
+// todo: money
 use serenity::{
-    framework::standard::{macros::command, CommandResult, Args},
+    framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
     prelude::*,
 };
@@ -9,8 +9,8 @@ use rand::{thread_rng, Rng};
 // for time stuff
 use std::{thread, time};
 // for usize to i32 convert
+use crate::database::database::get_money;
 use crate::fun::blackjack::edit_embed;
-use crate::money::shop::get_amount_of_tickets;
 use std::time::Duration;
 
 // define tile (E for empty)
@@ -30,7 +30,11 @@ async fn tictactoe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
             return Ok(());
         }
     };
-    // TODO: negative/betting too much prevention
+    if bet > get_money(&msg.author)? as u32 || bet < 0 {
+        msg.reply(&ctx.http, "You can't bet more money than you have.")
+            .await?;
+        return Ok(());
+    }
     let diff = match args.single::<u32>() {
         Ok(x) => x,
         Err(_) => {
@@ -49,12 +53,24 @@ async fn tictactoe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
         })
         .await?;
 
-    tictactoe_engine(&ctx, &mut message, &msg, bet, diff).await.unwrap();
+    let letters: Vec<char> = vec!['🇦', '🇧', '🇨', '🇩', '🇪', '🇫', '🇬', '🇭', '🇮'];
+    for letter in letters.iter() {
+        message.react(ctx, *letter).await?;
+    }
+    tictactoe_engine(&ctx, &mut message, &msg, bet, diff)
+        .await
+        .unwrap();
     Ok(())
 }
 
 // tictactoe engine, which is actually just a modified version of https://github.com/justanotherstrange/tictactoe.rs
-async fn tictactoe_engine(ctx: &Context, message: &mut Message, msg: &Message, bet: u32, diff: u32) -> Result<(), ()> {
+async fn tictactoe_engine(
+    ctx: &Context,
+    message: &mut Message,
+    msg: &Message,
+    bet: u32,
+    diff: u32,
+) -> Result<(), ()> {
     // let quarter_second = time::Duration::from_millis(250); // for sleeps later on
     let now = time::Instant::now();
     // gen board
@@ -62,8 +78,14 @@ async fn tictactoe_engine(ctx: &Context, message: &mut Message, msg: &Message, b
     let difficulty_int: usize = diff as usize;
 
     // show board key for prompting for first move
-    let board_key = format!("1 | 2 | 3\n----------\n4 | 5 | 6\n----------\n7 | 8 | 9");
-    edit_embed(&ctx, message, board_key.as_str(), "What is your first move?").await;
+    let board_key = format!("```A | B | C\n---------\nD | E | F\n---------\nG | H | I```");
+    edit_embed(
+        &ctx,
+        message,
+        board_key.as_str(),
+        "What is your first move?",
+    )
+    .await;
     loop {
         let mut input_int: usize;
         'main: loop {
@@ -81,9 +103,15 @@ async fn tictactoe_engine(ctx: &Context, message: &mut Message, msg: &Message, b
                 }
                 // match on the reacted emoji
                 input_int = match emoji.as_data().as_str() {
-                    "🎫" => 0,
-                    "📈" => 1,
-                    "🛑" => 2,
+                    "🇦" => 0,
+                    "🇧" => 1,
+                    "🇨" => 2,
+                    "🇩" => 3,
+                    "🇪" => 4,
+                    "🇫" => 5,
+                    "🇬" => 6,
+                    "🇭" => 7,
+                    "🇮" => 8,
                     _ => continue 'main, // if the reaction is none of the above, then do nothing.
                 };
             } else {
@@ -96,41 +124,57 @@ async fn tictactoe_engine(ctx: &Context, message: &mut Message, msg: &Message, b
             if board[input_int] == Tile::E {
                 break;
             } else {
-                println!("someone has already gone there!");
-                thread::sleep(time::Duration::from_secs(1));
-                format_board(&mut board);
+                edit_embed(&ctx, message, "Somebody has already gone there!", "...").await;
+                thread::sleep(Duration::from_millis(250));
+                let response = format_board(&mut board);
+                edit_embed(&ctx, message, "playing", response.as_str()).await;
             }
         }
-        board[input_int] = Tile::X; // todo: make this not use a function, and therefore, work/compile. it will have to take/await reactions. maybe keep it in a function?
-        format_board(&mut board);
+        board[input_int] = Tile::X;
+        let response = format_board(&mut board);
+        edit_embed(&ctx, message, "playing", response.as_str()).await;
         let win = win_check(&mut board);
         if win == 1 {
-            let response = format!("Difficulty was: {}, so you won WIP monies.\nTime: {} seconds", difficulty_int, now.elapsed().as_secs());
+            let response = format!(
+                "Difficulty was: {}, so you won WIP monies.\nTime: {} seconds",
+                difficulty_int,
+                now.elapsed().as_secs()
+            );
             edit_embed(&ctx, message, "You win!", response.as_str()).await;
             break;
         } else if win == 2 {
-            let response = format!("Difficulty was: {}, but you didn't win any monies.\nTime: {} seconds", difficulty_int, now.elapsed().as_secs());
+            let response = format!(
+                "Difficulty was: {}, but you didn't win any monies.\nTime: {} seconds",
+                difficulty_int,
+                now.elapsed().as_secs()
+            );
             edit_embed(&ctx, message, "Tie.", response.as_str()).await;
             break;
         }
         // computer turn
-        // todo: thinking message
-        // println!("thinking...");
         // wait one second
-        thread::sleep(time::Duration::from_secs(1)); // todo: make this sleep less?
+        thread::sleep(time::Duration::from_secs(1)); // make this sleep less? i don't think so.
         let comp_turn = computer_turn(&mut board, difficulty_int as i32);
         if comp_turn.1 == true {
             board[comp_turn.0] = Tile::O;
         }
         let response = format_board(&mut board);
-        edit_embed(&ctx, message, "playing", response.as_str()).await; // todo: better board printing. see how this looks on discord.
+        edit_embed(&ctx, message, "playing", response.as_str()).await;
         let win = win_check(&mut board);
         if win == 1 {
-            let response = format!("Difficulty was: {}, so you lost WIP monies.\nTime: {} seconds", difficulty_int, now.elapsed().as_secs());
+            let response = format!(
+                "Difficulty was: {}, so you lost WIP monies.\nTime: {} seconds",
+                difficulty_int,
+                now.elapsed().as_secs()
+            );
             edit_embed(&ctx, message, "You lose!", response.as_str()).await;
             break;
         } else if win == 2 {
-            let response = format!("Difficulty was: {}, but you didn't win any monies.\nTime: {} seconds", difficulty_int, now.elapsed().as_secs());
+            let response = format!(
+                "Difficulty was: {}, but you didn't win any monies.\nTime: {} seconds",
+                difficulty_int,
+                now.elapsed().as_secs()
+            );
             edit_embed(&ctx, message, "Tie.", response.as_str()).await;
             break;
         }
@@ -171,7 +215,7 @@ fn format_board(board: &mut [Tile; 9]) -> String {
         print_tile(board[8])
     );
     to_return.push_str(str.as_str());
-    to_return.push_str("\n`Key:\n1 | 2 | 3\n4 | 5 | 6\n7 | 8 | 9`");
+    to_return.push_str("\n`Key:\nA | B | C\nD | E | F\nG | H | I`");
     return to_return;
 }
 
@@ -211,7 +255,6 @@ fn win_check(board: &mut [Tile; 9]) -> i32 {
     }
     return 2;
 }
-
 
 fn go_two_os(board: &mut [Tile; 9]) -> (usize, bool) {
     if (board[1] == Tile::O && board[2] == Tile::O && board[0] == Tile::E)
@@ -544,7 +587,7 @@ fn computer_diff_gen(diffgen: i32) -> bool {
         } else {
             true
         }
-    }
+    };
 }
 
 fn computer_turn(board: &mut [Tile; 9], diffcomp: i32) -> (usize, bool) {
