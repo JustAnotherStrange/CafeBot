@@ -10,6 +10,8 @@ use rand::{thread_rng, Rng};
 use std::{thread, time};
 // for usize to i32 convert
 use crate::fun::blackjack::edit_embed;
+use crate::money::shop::get_amount_of_tickets;
+use std::time::Duration;
 
 // define tile (E for empty)
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -63,8 +65,43 @@ async fn tictactoe_engine(ctx: &Context, message: &mut Message, msg: &Message, b
     let board_key = format!("1 | 2 | 3\n----------\n4 | 5 | 6\n----------\n7 | 8 | 9");
     edit_embed(&ctx, message, board_key.as_str(), "What is your first move?").await;
     loop {
-        // Human's turn
-        board[take_turn(true, &mut board)] = Tile::X; // todo: make this not use a function, and therefore, work/compile. it will have to take/await reactions. maybe keep it in a function?
+        let mut input_int: usize;
+        'main: loop {
+            // remove newline character and turn into an integer from string
+            // match thing
+            if let Some(reaction) = message
+                .await_reaction(&ctx)
+                .timeout(Duration::from_secs(60)) // after 60 seconds without reactions, it will go to the "else" statement.
+                .await
+            {
+                let emoji = &reaction.as_inner_ref().emoji;
+                let reacted = &*reaction.as_inner_ref().clone();
+                if reacted.user(&ctx).await.unwrap() != msg.author {
+                    continue 'main;
+                }
+                // match on the reacted emoji
+                input_int = match emoji.as_data().as_str() {
+                    "🎫" => 0,
+                    "📈" => 1,
+                    "🛑" => 2,
+                    _ => continue 'main, // if the reaction is none of the above, then do nothing.
+                };
+            } else {
+                // gets here if there were no reactions for 60 seconds.
+                let new_description = "Two minutes passed with no reactions, so the shop closed.";
+                edit_embed(ctx, message, "Timed out.", new_description).await;
+                // todo: lose money on timeout like in blackjack
+                return Ok(()); // close the game
+            }
+            if board[input_int] == Tile::E {
+                break;
+            } else {
+                println!("someone has already gone there!");
+                thread::sleep(time::Duration::from_secs(1));
+                format_board(&mut board);
+            }
+        }
+        board[input_int] = Tile::X; // todo: make this not use a function, and therefore, work/compile. it will have to take/await reactions. maybe keep it in a function?
         format_board(&mut board);
         let win = win_check(&mut board);
         if win == 1 {
@@ -114,23 +151,23 @@ fn format_board(board: &mut [Tile; 9]) -> String {
     // formats board with nice formatting and a key off to the side
     let mut to_return = String::new();
     let str = format!(
-        "{} | {} | {}                    1 | 2 | 3",
+        "{} | {} | {}                    1 | 2 | 3\n",
         print_tile(board[0]),
         print_tile(board[1]),
         print_tile(board[2])
     );
     to_return.push_str(str.as_str());
-    to_return.push_str("----------                   ----------");
+    to_return.push_str("----------                   ---------\n");
     let str = format!(
-        "{} | {} | {}              Key:  4 | 5 | 6",
+        "{} | {} | {}              Key:  4 | 5 | 6\n",
         print_tile(board[3]),
         print_tile(board[4]),
         print_tile(board[5])
     );
     to_return.push_str(str.as_str());
-    to_return.push_str("----------                   ----------");
+    to_return.push_str("----------                   ----------\n");
     let str = format!(
-        "{} | {} | {}                    7 | 8 | 9",
+        "{} | {} | {}                    7 | 8 | 9\n",
         print_tile(board[6]),
         print_tile(board[7]),
         print_tile(board[8])
@@ -559,19 +596,3 @@ fn computer_turn(board: &mut [Tile; 9], diffcomp: i32) -> (usize, bool) {
     }
     return (0, false);
 }
-
-// fn take_turn(isx: bool, board: &mut [Tile; 9]) -> usize {
-//     loop {
-//         // remove newline character and turn into an integer from string
-//         let mut input_int: usize = input.trim().parse().unwrap();
-//         // off by one error prevention
-//         input_int = input_int - 1;
-//         if board[input_int] == Tile::E {
-//             return input_int;
-//         } else {
-//             println!("someone has already gone there!");
-//             thread::sleep(time::Duration::from_secs(1));
-//             format_board(board);
-//         }
-//     }
-// }
