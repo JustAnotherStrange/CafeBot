@@ -1,8 +1,8 @@
 use crate::database::database::{gen_connection, get_incr_amount, get_money};
 use crate::money::shop::get_amount_of_tickets;
-use serenity::http::AttachmentType;
-use serenity::{
+pub use serenity::{
     framework::standard::{macros::command, CommandResult},
+    http::AttachmentType,
     model::prelude::*,
     prelude::*,
 };
@@ -21,7 +21,10 @@ async fn profile(ctx: &Context, msg: &Message) -> CommandResult {
     pfp_link.push_str("?size=16"); // for a smaller image
     let mut username = user.name.clone();
     match user.nick_in(&ctx, msg.guild_id.unwrap()).await {
-        Some(x) => username.push_str(x.as_str()),
+        Some(x) => {
+            let str = format!("\n\"{}\"", x);
+            username.push_str(str.as_str())
+        }
         None => {}
     }
     let desc = format!(
