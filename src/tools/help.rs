@@ -33,17 +33,31 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             `^run [^r]` - run a custom command. e.g. '^r bruh'. Do '^r [command name] delete' to delete one (admin only) or '^r list' to list available commands.
             as well, you can pipe the output into 'programs' using the `|` symbol.
             `^wallet` - see how much money you have.
-            `^coin_flip [bet]` - flip a coin for money.
-            `^give_money [^give] [amount] [recipient]` - give money to someone.
-            `^blackjack [bet]` - play blackjack for money.
-            `^leaderboard [choice]` - get a leaderboard. available options are currently 'money' and 'daily'.
-            `^pool` - see the pool for your server. it takes half of all lost money from games.";
+            `^coin_flip [bet]` - flip a coin for money.";
             // send commands as an embed
             msg.channel_id
                 .send_message(&ctx.http, |m| {
                     // m.content("");
                     m.embed(|e| {
                         e.title("**Welcome to CafeBot!**");
+                        e.description(&response);
+                        e.footer(|f| {
+                            f.text(&footer);
+                            f
+                        });
+                        e
+                    });
+                    m
+                })
+                .await?;
+            // because 2k char limit
+            let response = "`^give_money [^give] [amount] [recipient]` - give money to someone.
+            `^blackjack [bet]` - play blackjack for money.
+            `^leaderboard [choice]` - get a leaderboard. available options are currently 'money' and 'daily'.
+            `^pool` - see the pool for your server. it takes half of all lost money from games.";
+            msg.channel_id
+                .send_message(&ctx.http, |m| {
+                    m.embed(|e| {
                         e.description(&response);
                         e.footer(|f| {
                             f.text(&footer);
