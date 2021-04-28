@@ -1,4 +1,4 @@
-use crate::database::database::{create_user_if_not_exist, gen_connection, get_money};
+use crate::database::database::{create_user_if_not_exist, gen_connection, get_money, get_incr_amount};
 use crate::fun::blackjack::edit_embed;
 use rusqlite::{params, Connection};
 use serenity::{
@@ -24,15 +24,17 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
             })
         })
         .await?;
-    let letters: Vec<char> = vec!['🎫', '🛑']; // ticket
+    let letters: Vec<char> = vec!['🎫', '📈', '🛑']; // ticket
     for letter in letters.iter() {
         message.react(ctx, *letter).await?;
     }
     let ticket_amnt = get_amount_of_tickets(&msg.author, &conn)?;
     let ticket_price: u32 = 100 * (2_u32.pow(ticket_amnt));
+    let incr_amnt = get_incr_amount(&msg.author, &conn);
+    let incr_price = (incr_amnt + 2) * 100;
     let description = format!(
-        "{}: Ticket: {} monies\n{}: Leave the shop.",
-        letters[0], ticket_price, letters[1]
+        "{}: Ticket: {} monies\n{}: Increase hourly increase of money by 2: {} monies\n{}: Leave the shop.",
+        letters[0], ticket_price, letters[1], incr_price, letters[2]
     );
     edit_embed(
         &ctx,
@@ -88,7 +90,20 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                         }
                     };
                     return Ok(());
-                }
+                },
+                "📈" => {
+                    match purchase(&msg.author, incr_price as u32).await {
+                        Ok(_) => {
+                            conn.execute("update users set incr_amount = incr_amount + 2 where id = ?1", params![msg.author.id.as_u64()])?;
+                            let description = format!("You increased your idle money increase by 2 for **{}** monies.", incr_price);
+                            edit_embed(&ctx, &mut message, "Success!", &*description).await;
+                        }
+                        Err(_) => {
+                            edit_embed(&ctx, &mut message, "Nice try, but you don't have enough money to buy that.", "haha poor.").await;
+                        }
+                    };
+                    return Ok(());
+                },
                 "🛑" => {
                     edit_embed(&ctx, &mut message, "Goodbye!", "The shop is closed here.").await;
                     return Ok(());

@@ -8,7 +8,7 @@ pub fn db_init() -> Result<()> {
     // the UNIQUE on the id column is so u can test to see if it already exists or not (see create_user function)
     conn.execute(
         "create table if not exists users(
-    id int not null unique, money int not null, tickets int not null)",
+    id int not null unique, money int not null, tickets int not null, incr_amount not null)",
         [],
     )?;
     // customs table
@@ -42,8 +42,8 @@ pub fn gen_connection() -> Connection {
 pub fn create_user_if_not_exist(user: &User, conn: &Connection) -> Result<()> {
     // insert if not already exists
     conn.execute(
-        "insert or ignore into users values (?1, ?2, ?3)",
-        params![user.id.as_u64(), 10, 0],
+        "insert or ignore into users values (?1, ?2, ?3, ?4)",
+        params![user.id.as_u64(), 10, 0, 2],
     )?;
     Ok(())
 }
@@ -95,5 +95,15 @@ pub fn get_money(user: &User) -> Result<i32> {
         params![user.id.as_u64()],
         |row| Ok(row.get(0)?),
     );
+    return money;
+}
+
+pub fn get_incr_amount(user: &User, conn: &Connection) -> i32 {
+    // let mut stmt = conn.prepare("select money from users where id = ?1")?;
+    let money = conn.query_row(
+        "select incr_amount from users where id = ?1",
+        params![user.id.as_u64()],
+        |row| Ok(row.get(0).unwrap()),
+    ).unwrap();
     return money;
 }

@@ -21,7 +21,7 @@ use fun::{
 };
 use message_change::{owo::*, sarcasm::*, say::*};
 use money::{coin_flip::*, give::*, leaderboard::*, money::*, pool::*, shop::*};
-use tools::{custom::*, help::*, latency::*, ping::*};
+use tools::{custom::*, help::*, latency::*, ping::*, profile::*};
 
 mod admin;
 mod database;
@@ -68,7 +68,8 @@ struct Handler;
     blackjack,
     leaderboard,
     pool,
-    shop
+    shop,
+    profile
 )]
 
 struct General;
