@@ -151,28 +151,27 @@ fn format_board(board: &mut [Tile; 9]) -> String {
     // formats board with nice formatting and a key off to the side
     let mut to_return = String::new();
     let str = format!(
-        "{} | {} | {}                    1 | 2 | 3\n",
+        "```{} | {} | {}\n",
         print_tile(board[0]),
         print_tile(board[1]),
         print_tile(board[2])
     );
     to_return.push_str(str.as_str());
-    to_return.push_str("----------                   ---------\n");
     let str = format!(
-        "{} | {} | {}              Key:  4 | 5 | 6\n",
+        "{} | {} | {}\n",
         print_tile(board[3]),
         print_tile(board[4]),
         print_tile(board[5])
     );
     to_return.push_str(str.as_str());
-    to_return.push_str("----------                   ----------\n");
     let str = format!(
-        "{} | {} | {}                    7 | 8 | 9\n",
+        "{} | {} | {}```\n",
         print_tile(board[6]),
         print_tile(board[7]),
         print_tile(board[8])
     );
     to_return.push_str(str.as_str());
+    to_return.push_str("\n`Key:\n1 | 2 | 3\n4 | 5 | 6\n7 | 8 | 9`");
     return to_return;
 }
 
