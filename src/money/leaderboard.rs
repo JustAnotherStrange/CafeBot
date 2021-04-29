@@ -13,16 +13,12 @@ struct Leader {
 }
 
 #[command]
+#[aliases("lb")]
 async fn leaderboard(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // let mut stmt = conn.prepare("select money from users where id = ?1")?;
     let choice = match args.single::<String>() {
         Ok(x) => x,
-        Err(_) => {
-            // No arguments
-            msg.reply(&ctx.http, "Please enter in this syntax: `^leaderboard [choice]`. The available leaderboards are `money` and `daily`.")
-                .await?;
-            return Ok(());
-        }
+        Err(_) => "money".to_string(),
     };
     let leader_vec = get_leaderboard(choice.clone()).await.unwrap();
     let mut response = String::new();
