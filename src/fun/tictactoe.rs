@@ -9,7 +9,6 @@ use rand::{thread_rng, Rng};
 // for time stuff
 use std::{thread, time};
 // for usize to i32 convert
-use crate::database::database::get_money;
 use crate::fun::blackjack::edit_embed;
 use std::time::Duration;
 
@@ -22,32 +21,28 @@ enum Tile {
 }
 
 #[command]
+#[aliases("ttt")]
 async fn tictactoe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let bet = match args.single::<u32>() {
-        Ok(x) => x,
-        Err(_) => {
-            msg.reply(&ctx.http, "Please [correct arguments]").await?;
-            return Ok(());
-        }
-    };
-    if bet > get_money(&msg.author)? as u32 || bet < 0 {
-        msg.reply(&ctx.http, "You can't bet more money than you have.")
-            .await?;
-        return Ok(());
-    }
     let diff = match args.single::<u32>() {
-        Ok(x) => x,
+        Ok(x) => {
+            if x > 100 {
+                msg.reply(&ctx.http, "Please make the difficulty between 1 and 100.").await?;
+                return Ok(());
+            }
+            x
+        },
         Err(_) => {
-            msg.reply(&ctx.http, "Please [correct arguments]").await?;
+            msg.reply(&ctx.http, "Please enter in this syntax: `^tictactoe [difficulty]`").await?;
             return Ok(());
         }
     };
-    let mut message = msg.reply(&ctx.http, "tic tac toe").await?;
+    let response = format!("**{} started a game of Tic Tac Toe!", msg.author.name);
+    let mut message = msg.reply(&ctx.http, response).await?;
     // initial embed
     message
         .edit(&ctx, |m| {
             m.embed(|e| {
-                e.title("Loading...");
+                e.title("Loading reactions...");
                 e
             })
         })
@@ -57,7 +52,7 @@ async fn tictactoe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
     for letter in letters.iter() {
         message.react(ctx, *letter).await?;
     }
-    tictactoe_engine(&ctx, &mut message, &msg, bet, diff)
+    tictactoe_engine(&ctx, &mut message, &msg,diff)
         .await
         .unwrap();
     Ok(())
@@ -68,7 +63,6 @@ async fn tictactoe_engine(
     ctx: &Context,
     message: &mut Message,
     msg: &Message,
-    bet: u32,
     diff: u32,
 ) -> Result<(), ()> {
     // let quarter_second = time::Duration::from_millis(250); // for sleeps later on
@@ -136,7 +130,7 @@ async fn tictactoe_engine(
         let win = win_check(&mut board);
         if win == 1 {
             let response = format!(
-                "Difficulty was: {}, so you won WIP monies.\nTime: {} seconds",
+                "Difficulty was: {}.\nTime: {} seconds",
                 difficulty_int,
                 now.elapsed().as_secs()
             );
@@ -144,7 +138,7 @@ async fn tictactoe_engine(
             break;
         } else if win == 2 {
             let response = format!(
-                "Difficulty was: {}, but you didn't win any monies.\nTime: {} seconds",
+                "Difficulty was: {}.\nTime: {} seconds",
                 difficulty_int,
                 now.elapsed().as_secs()
             );
@@ -163,7 +157,7 @@ async fn tictactoe_engine(
         let win = win_check(&mut board);
         if win == 1 {
             let response = format!(
-                "Difficulty was: {}, so you lost WIP monies.\nTime: {} seconds",
+                "Difficulty was: {}.\nTime: {} seconds",
                 difficulty_int,
                 now.elapsed().as_secs()
             );
@@ -171,7 +165,7 @@ async fn tictactoe_engine(
             break;
         } else if win == 2 {
             let response = format!(
-                "Difficulty was: {}, but you didn't win any monies.\nTime: {} seconds",
+                "Difficulty was: {}.\nTime: {} seconds",
                 difficulty_int,
                 now.elapsed().as_secs()
             );
