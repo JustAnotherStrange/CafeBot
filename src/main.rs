@@ -16,8 +16,8 @@ use serenity::{
 use admin::{admin_test::*, slow_mode::*, status::*};
 use database::database::db_init;
 use fun::{
-    blackjack::*, bruh::*, count::*, daily::*, dice::*, game::*, hair::*, rps::*, wiki::*, xkcd::*,
-    zote::*,
+    blackjack::*, bruh::*, count::*, daily::*, dice::*, game::*, hair::*, rps::*, tictactoe::*,
+    wiki::*, xkcd::*, zote::*,
 };
 use message_change::{owo::*, sarcasm::*, say::*};
 use money::{coin_flip::*, give::*, leaderboard::*, money::*, pool::*, shop::*};
@@ -69,7 +69,8 @@ struct Handler;
     leaderboard,
     pool,
     shop,
-    profile
+    profile,
+    tictactoe
 )]
 
 struct General;
