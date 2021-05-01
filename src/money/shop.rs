@@ -96,6 +96,16 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                 "📈" => {
                     match purchase(&msg.author, incr_price as u32).await {
                         Ok(_) => {
+                            if get_incr_amount(&msg.author, &conn) >= 50 {
+                                edit_embed(
+                                    &ctx,
+                                    &mut message,
+                                    "Failure.",
+                                    "You have hit the max increase amount.",
+                                )
+                                .await;
+                                return Ok(());
+                            }
                             conn.execute(
                                 "update users set incr_amount = incr_amount + 2 where id = ?1",
                                 params![msg.author.id.as_u64()],

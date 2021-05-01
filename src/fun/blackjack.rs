@@ -76,7 +76,6 @@ async fn blackjack_engine(
     let mut sum1: usize;
     let mut sum2: usize = hand2.iter().sum();
 
-
     // Bot's reactions, so the user knows what to do.
     message
         .edit(&ctx, |m| {
