@@ -33,7 +33,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
     let ticket_amnt = get_amount_of_tickets(&msg.author, &conn)?;
     let ticket_price: u32 = 100 * (2_u32.pow(ticket_amnt));
     let incr_amnt = get_incr_amount(&msg.author, &conn);
-    let incr_price = (incr_amnt + 2) * 100;
+    let incr_price = 10 * incr_amnt.pow(2) + 200;
     let description = format!(
         "{}: Ticket: {} monies\n{}: Increase hourly increase of money by 2: {} monies\n{}: Leave the shop.",
         letters[0], ticket_price, letters[1], incr_price, letters[2]
