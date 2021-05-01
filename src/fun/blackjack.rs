@@ -36,15 +36,6 @@ async fn blackjack(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let mut message = msg.reply(&ctx.http, &response).await?;
 
     // initial embed
-    message
-        .edit(&ctx, |m| {
-            m.embed(|e| {
-                e.title("Loading...");
-                e
-            })
-        })
-        .await?;
-
     // call the blackjack engine
     blackjack_engine(ctx, &mut message, msg, bet).await?;
     Ok(())
@@ -85,19 +76,28 @@ async fn blackjack_engine(
     let mut sum1: usize;
     let mut sum2: usize = hand2.iter().sum();
 
-    // set the title of the embed to be a nicely formatted display of the game status.
-    let new_title = format_game_status(None, hand1.clone(), hand2.clone(), false);
-    edit_embed(ctx, message, new_title.as_str(), "Hit or stay? (React)").await;
 
     // Bot's reactions, so the user knows what to do.
+    message
+        .edit(&ctx, |m| {
+            m.embed(|e| {
+                e.title("Loading...");
+                e
+            })
+        })
+        .await?;
+
     let letters: Vec<char> = vec!['✋', '🛑'];
     for letter in letters.iter() {
         message.react(ctx, *letter).await?;
     }
     let mut stay = false;
 
+    // set the title of the embed to be a nicely formatted display of the game status.
+    let new_title = format_game_status(None, hand1.clone(), hand2.clone(), false);
+    edit_embed(ctx, message, new_title.as_str(), "Hit or stay? (React)").await;
     // large loop, where the gameplay happens
-    '_main: loop {
+    'main: loop {
         // player turn
         'not_stay: while !stay {
             // await reactions and then match on them
@@ -215,6 +215,15 @@ async fn blackjack_engine(
         // Same checks again!?!? Me one month ago writing the engine for this was being pretty bald ngl.
         sum2 = hand2.iter().sum();
         if sum2 > 21 {
+            // 11 checking.
+            if hand2.contains(&11) {
+                for i in hand2.iter_mut() {
+                    if i == &11 {
+                        *i = 1;
+                        continue 'main; // breaks big loop, because outside of while loop.
+                    }
+                }
+            }
             edit_embed(ctx, message, "The dealer bust!", "The dealer bust!").await;
             sleep(quarter_second);
             player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
