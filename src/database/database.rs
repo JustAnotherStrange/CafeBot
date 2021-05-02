@@ -51,7 +51,7 @@ pub fn money_increment(user: &User, guild_id: u64, amount: i32) -> Result<()> {
     let conn = gen_connection();
     create_user_if_not_exist(&user, &conn)?;
     if amount.is_negative() {
-        pool_increment(guild_id, amount / -2, &conn)?;
+        pool_increment(guild_id, amount / -4, &conn)?;
     }
     conn.execute(
         "update users set money = money + ?1 where id = ?2",
