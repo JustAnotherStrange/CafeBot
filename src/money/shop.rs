@@ -33,7 +33,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
     let ticket_amnt = get_amount_of_tickets(&msg.author, &conn)?;
     let ticket_price: u32 = 100 * (2_u32.pow(ticket_amnt));
     let incr_amnt = get_incr_amount(&msg.author, &conn);
-    let incr_price = (incr_amnt + 2) * 100;
+    let incr_price = 10 * incr_amnt.pow(2) + 200;
     let description = format!(
         "{}: Ticket: {} monies\n{}: Increase hourly increase of money by 2: {} monies\n{}: Leave the shop.",
         letters[0], ticket_price, letters[1], incr_price, letters[2]
@@ -96,6 +96,16 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                 "📈" => {
                     match purchase(&msg.author, incr_price as u32).await {
                         Ok(_) => {
+                            if get_incr_amount(&msg.author, &conn) >= 50 {
+                                edit_embed(
+                                    &ctx,
+                                    &mut message,
+                                    "Failure.",
+                                    "You have hit the max increase amount.",
+                                )
+                                .await;
+                                return Ok(());
+                            }
                             conn.execute(
                                 "update users set incr_amount = incr_amount + 2 where id = ?1",
                                 params![msg.author.id.as_u64()],
