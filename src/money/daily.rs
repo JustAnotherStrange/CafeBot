@@ -7,10 +7,10 @@ use serenity::{
     model::prelude::*,
     prelude::*,
 };
-struct Daily {
-    id: u64,
-    date: String,
-    streak: u32,
+pub struct Daily {
+    pub id: u64,
+    pub date: String,
+    pub streak: u32,
 }
 #[command]
 async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
@@ -21,7 +21,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
     let mut yesterday_string = format!("{}", Local::now() - Duration::hours(24));
     yesterday_string = format!("{}", &yesterday_string[0..10]); // calculate yesterday's date similarly
 
-    let user = match get_user(&msg.author) {
+    let user = match get_daily_user(&msg.author) {
         Some(x) => x,
         None => {
             // if the file has just been created, allow the Day 1 (previously it would say "last line != yesterdays date, so fail"
@@ -87,7 +87,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 // Get user from db as Daily struct.
-fn get_user(user: &User) -> Option<Daily> {
+pub fn get_daily_user(user: &User) -> Option<Daily> {
     let conn = gen_connection();
     let mut stmt = conn.prepare("select * from daily where id = ?1").ok()?;
     return stmt

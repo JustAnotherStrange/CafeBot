@@ -1,6 +1,7 @@
 use crate::database::database::{gen_connection, get_incr_amount, get_money};
+use crate::money::daily::get_daily_user;
 use crate::money::shop::get_amount_of_tickets;
-pub use serenity::{
+use serenity::{
     framework::standard::{macros::command, CommandResult},
     http::AttachmentType,
     model::prelude::*,
@@ -15,6 +16,7 @@ async fn profile(ctx: &Context, msg: &Message) -> CommandResult {
     let money = get_money(user).unwrap();
     let tickets = get_amount_of_tickets(user, &conn).unwrap();
     let incr_amount = get_incr_amount(user, &conn);
+    let streak = get_daily_user(&msg.author).unwrap().streak;
 
     // if there is a pfp, use that. else, use the default pfp thing.
     let mut pfp_link = user.face();
@@ -28,8 +30,11 @@ async fn profile(ctx: &Context, msg: &Message) -> CommandResult {
         None => {}
     }
     let desc = format!(
-        "Monies: **{}**\nTickets: **{}**\nIdle increase: **{}**",
-        money, tickets, incr_amount
+        "Monies: **{}**
+        Tickets: **{}**
+        Idle increase: **{}**
+        Daily streak: **{}**",
+        money, tickets, incr_amount, streak
     );
 
     // send in embed

@@ -1,7 +1,10 @@
+pub mod blackjack;
 pub mod coin_flip;
+pub mod daily;
 pub mod give;
 pub mod interest;
 pub mod leaderboard;
 pub mod money;
 pub mod pool;
+pub mod rps;
 pub mod shop;

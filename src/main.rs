@@ -15,18 +15,18 @@ use serenity::{
 
 use admin::{admin_test::*, slow_mode::*, status::*};
 use database::database::db_init;
-use fun::{
-    blackjack::*, bruh::*, count::*, daily::*, dice::*, game::*, hair::*, rps::*, tictactoe::*,
-    wiki::*, xkcd::*, zote::*,
-};
 use message_change::{owo::*, sarcasm::*, say::*};
-use money::{coin_flip::*, give::*, leaderboard::*, money::*, pool::*, shop::*};
-use tools::{custom::*, help::*, latency::*, ping::*, profile::*};
+use misc::{bruh::*, count::*, dice::*, game::*, hair::*, tictactoe::*, zote::*};
+use money::{
+    blackjack::*, coin_flip::*, daily::*, give::*, leaderboard::*, money::*, pool::*, rps::*,
+    shop::*,
+};
+use tools::{custom::*, help::*, latency::*, ping::*, profile::*, wiki::*, xkcd::*};
 
 mod admin;
 mod database;
-mod fun;
 mod message_change;
+mod misc;
 mod money;
 mod tools;
 
@@ -77,15 +77,6 @@ struct General;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn ready(&self, ctx: Context, ready: Ready) {
-        // inform when connected
-        println!("Connected as {}", ready.user.name);
-        ctx.set_presence(
-            Some(Activity::playing("vid eo g ame s")),
-            OnlineStatus::Online,
-        )
-        .await; // set status to "Playing vid eo g ame s" - other Activity::* - listening, competing, streaming
-    }
     async fn message(&self, ctx: Context, msg: Message) {
         // ----- subreddit detecting and linking by g_w1 -----
         if !(msg.content.to_lowercase().contains("://reddit.com")) {
@@ -112,6 +103,15 @@ impl EventHandler for Handler {
             }
         }
         // ----- end subreddit detecting -----
+    }
+    async fn ready(&self, ctx: Context, ready: Ready) {
+        // inform when connected
+        println!("Connected as {}", ready.user.name);
+        ctx.set_presence(
+            Some(Activity::playing("vid eo g ame s")),
+            OnlineStatus::Online,
+        )
+        .await; // set status to "Playing vid eo g ame s" - other Activity::* - listening, competing, streaming
     }
 }
 

@@ -9,7 +9,7 @@ use rand::{thread_rng, Rng};
 // for time stuff
 use std::{thread, time};
 // for usize to i32 convert
-use crate::fun::blackjack::edit_embed;
+use crate::money::blackjack::edit_embed;
 use std::time::Duration;
 
 // define tile (E for empty)
@@ -26,17 +26,22 @@ async fn tictactoe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
     let diff = match args.single::<u32>() {
         Ok(x) => {
             if x > 100 {
-                msg.reply(&ctx.http, "Please make the difficulty between 1 and 100.").await?;
+                msg.reply(&ctx.http, "Please make the difficulty between 1 and 100.")
+                    .await?;
                 return Ok(());
             }
             x
-        },
+        }
         Err(_) => {
-            msg.reply(&ctx.http, "Please enter in this syntax: `^tictactoe [difficulty]`").await?;
+            msg.reply(
+                &ctx.http,
+                "Please enter in this syntax: `^tictactoe [difficulty]`",
+            )
+            .await?;
             return Ok(());
         }
     };
-    let response = format!("**{} started a game of Tic Tac Toe!", msg.author.name);
+    let response = format!("**{} started a game of Tic Tac Toe!**", msg.author.name);
     let mut message = msg.reply(&ctx.http, response).await?;
     // initial embed
     message
@@ -52,7 +57,7 @@ async fn tictactoe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
     for letter in letters.iter() {
         message.react(ctx, *letter).await?;
     }
-    tictactoe_engine(&ctx, &mut message, &msg,diff)
+    tictactoe_engine(&ctx, &mut message, &msg, diff)
         .await
         .unwrap();
     Ok(())

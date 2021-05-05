@@ -12,28 +12,32 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let footer = "CafeBot v0.8.1: https://github.com/JustAnotherStrange/CafeBot";
     match args.rest() {
         "" => {
-            let response = "__Commands:__
+            let response = "__**Commands:**__
+
+            __Tools:__
             `^help [page]` - show help pages. Specify no page for the general help or use one of the following categories: admin
             `^ping` - pong
+            `^profile` - show information about your user in the database
+            `^latency` - see latency to bot host.
+            `^custom` - create a custom command. e.g. '^custom bruh bruh moment'.
+            `^run [^r]` - run a custom command. e.g. '^r bruh'. Do '^r [command name] delete' to delete one (admin only) or '^r list' to list available commands.
+            as well, you can pipe the output into 'programs' using the `|` symbol.
+            `^wiki [search term]` - search wikipedia
+            `^xkcd` - get xkcd comics. run with no arguments for the latest, 'random' for a random comic, or a number of the specific one you want.
+
+            __Message Modification:__
             `^say` - repeat anything that comes after this command
+            `^sarcasm [^s, ^/s]` - modify your message to bE lIkE tHiS.
+            `^owo` - modify your message to be owoified.
+
+            __Miscellaneous:__
             `^count` - count as high as you can
             `^hair [^bald]` - see how bald you are.
             `^balder [person1] [person2]` - compare 2 people to see how bald they are
             `^zote` - find precepts of zote. ^zote [number] for a specific precept, ^zote random for a random one, and ^zote bald for our own precept.
             `^bruh` - get a random bruh emote
-            `^latency` - see latency to bot host.
-            `^sarcasm [^s, ^/s]` - modify your message to bE lIkE tHiS.
-            `^owo` - modify your message to be owoified.
-            `^daily` - run this daily to maintain a streak. forgetting one day will result in a reset.
-            `^xkcd` - get xkcd comics. run with no arguments for the latest, 'random' for a random comic, or a number of the specific one you want.
-            `^rockpaperscissors [^rps] [move] [bet]` - play rock paper scissors! Example: ^rps rock 50
-            `^wiki [search term]` - search wikipedia
             `^dice [^d]` - roll dice using the standard dnd syntax; supports bonuses.
-            `^custom` - create a custom command. e.g. '^custom bruh bruh moment'.
-            `^run [^r]` - run a custom command. e.g. '^r bruh'. Do '^r [command name] delete' to delete one (admin only) or '^r list' to list available commands.
-            as well, you can pipe the output into 'programs' using the `|` symbol.
-            `^wallet` - see how much money you have.
-            `^coin_flip [bet]` - flip a coin for money.";
+            `^tictactoe [^ttt] [difficulty]` - play tic tac toe! difficulty is 1 through 100.";
             // send commands as an embed
             msg.channel_id
                 .send_message(&ctx.http, |m| {
@@ -51,11 +55,15 @@ async fn help(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                 })
                 .await?;
             // because 2k char limit
-            let response = "`^give_money [^give] [amount] [recipient]` - give money to someone.
-            `^blackjack [bet]` - play blackjack for money.
+            let response = "__Money:__
+            `^wallet` - see how much money you have.
+            `^daily` - run this daily to maintain a streak. forgetting one day will result in a reset.
+            `^coin_flip [bet]` - flip a coin for money.
+            `^blackjack [^bj] [bet]` - play blackjack for money.
+            `^give_money [^give] [amount] [recipient]` - give money to someone.
+            `^rockpaperscissors [^rps] [move] [bet]` - play rock paper scissors! example: ^rps rock 50
             `^leaderboard [choice]` - get a leaderboard. available options are currently 'money' and 'daily'.
-            `^pool` - see the pool for your server. it takes half of all lost money from games.
-            `^tictactoe [^ttt] [difficulty]` - play tic tac toe! difficulty is 1 through 100.";
+            `^pool` - see the pool for your server. its usage will soon be changed, right now it is 1/4th of all lost money";
             msg.channel_id
                 .send_message(&ctx.http, |m| {
                     m.embed(|e| {

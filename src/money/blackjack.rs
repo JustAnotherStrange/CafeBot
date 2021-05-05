@@ -12,6 +12,7 @@ use std::{thread::sleep, time, time::Duration};
 
 #[command]
 #[only_in(guilds)]
+#[aliases("bj")]
 async fn blackjack(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // parse bet amount
     let bet: i32 = match args.rest().trim().parse() {
@@ -75,7 +76,6 @@ async fn blackjack_engine(
     // let mut sum1: usize = hand1.iter().sum();
     let mut sum1: usize;
     let mut sum2: usize = hand2.iter().sum();
-
 
     // Bot's reactions, so the user knows what to do.
     message

@@ -1,7 +1,7 @@
 use crate::database::database::{
     create_user_if_not_exist, gen_connection, get_incr_amount, get_money,
 };
-use crate::fun::blackjack::edit_embed;
+use crate::money::blackjack::edit_embed;
 use rusqlite::{params, Connection};
 use serenity::{
     framework::standard::{macros::command, CommandResult},
