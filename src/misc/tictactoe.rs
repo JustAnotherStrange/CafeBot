@@ -1,4 +1,3 @@
-// todo: money
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::prelude::*,
@@ -117,7 +116,6 @@ async fn tictactoe_engine(
                 // gets here if there were no reactions for 60 seconds.
                 let new_description = "Two minutes passed with no reactions, so the shop closed.";
                 edit_embed(ctx, message, "Timed out.", new_description).await;
-                // todo: lose money on timeout like in blackjack
                 return Ok(()); // close the game
             }
             if board[input_int] == Tile::E {

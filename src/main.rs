@@ -19,7 +19,7 @@ use message_change::{owo::*, sarcasm::*, say::*};
 use misc::{bruh::*, count::*, dice::*, game::*, hair::*, tictactoe::*, zote::*};
 use money::{
     blackjack::*, coin_flip::*, daily::*, give::*, leaderboard::*, money::*, pool::*, rps::*,
-    shop::*,
+    scratchoff::*, shop::*,
 };
 use tools::{custom::*, help::*, latency::*, ping::*, profile::*, wiki::*, xkcd::*};
 
@@ -70,7 +70,8 @@ struct Handler;
     pool,
     shop,
     profile,
-    tictactoe
+    tictactoe,
+    scratchoff
 )]
 
 struct General;

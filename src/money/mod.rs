@@ -7,4 +7,5 @@ pub mod leaderboard;
 pub mod money;
 pub mod pool;
 pub mod rps;
+pub mod scratchoff;
 pub mod shop;
