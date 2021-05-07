@@ -1,5 +1,10 @@
 use rusqlite::{params, Connection, Result};
 use serenity::model::prelude::*;
+pub struct ScratchOff {
+    pub tier1: u32,
+    pub tier2: u32,
+    pub tier3: u32,
+}
 
 pub fn db_init() -> Result<()> {
     let conn = gen_connection();
@@ -8,7 +13,8 @@ pub fn db_init() -> Result<()> {
     // the UNIQUE on the id column is so u can test to see if it already exists or not (see create_user function)
     conn.execute(
         "create table if not exists users(
-    id int not null unique, money int not null, tickets int not null, incr_amount not null)",
+    id int not null unique, money int not null, tickets int not null, incr_amount not null,
+    so_tier1 int not null, so_tier2 int not null, so_tier3 int not null)",
         [],
     )?;
     // customs table
@@ -42,8 +48,8 @@ pub fn gen_connection() -> Connection {
 pub fn create_user_if_not_exist(user: &User, conn: &Connection) -> Result<()> {
     // insert if not already exists
     conn.execute(
-        "insert or ignore into users values (?1, ?2, ?3, ?4)",
-        params![user.id.as_u64(), 10, 0, 2],
+        "insert or ignore into users values (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        params![user.id.as_u64(), 10, 0, 2, 0, 0, 0],
     )?;
     Ok(())
 }
@@ -108,4 +114,17 @@ pub fn get_incr_amount(user: &User, conn: &Connection) -> i32 {
         )
         .unwrap();
     return money;
+}
+
+pub fn get_so(user: &User, conn: &Connection) -> ScratchOff {
+    let mut stmt = conn.prepare("select so_tier1, so_tier2, so_tier3 from users where id = ?1").unwrap();
+    return stmt
+        .query_row(params![user.id.as_u64()], |row| {
+            Ok(ScratchOff {
+                tier1: row.get(0).unwrap(),
+                tier2: row.get(1).unwrap(),
+                tier3: row.get(2).unwrap(),
+            })
+        })
+        .unwrap();
 }

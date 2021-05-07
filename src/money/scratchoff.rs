@@ -7,9 +7,7 @@ use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
     prelude::*,
-    Error,
 };
-use std::{thread::sleep, time, time::Duration};
 
 #[command]
 async fn scratchoff(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
