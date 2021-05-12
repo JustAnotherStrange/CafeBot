@@ -1,4 +1,4 @@
-// Simple help command.
+// Help command that uses embeds + reaction navigation
 use crate::admin::admin_test::is_admin;
 use serenity::{
     framework::standard::{macros::command, CommandResult},
@@ -6,9 +6,9 @@ use serenity::{
     prelude::*,
 };
 use std::time::Duration;
-struct EditContent {
-    title: String,
-    description: String,
+pub struct EditContent {
+    pub title: String,
+    pub description: String,
 }
 
 #[command]

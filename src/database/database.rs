@@ -117,7 +117,9 @@ pub fn get_incr_amount(user: &User, conn: &Connection) -> i32 {
 }
 
 pub fn get_so(user: &User, conn: &Connection) -> ScratchOff {
-    let mut stmt = conn.prepare("select so_tier1, so_tier2, so_tier3 from users where id = ?1").unwrap();
+    let mut stmt = conn
+        .prepare("select so_tier1, so_tier2, so_tier3 from users where id = ?1")
+        .unwrap();
     return stmt
         .query_row(params![user.id.as_u64()], |row| {
             Ok(ScratchOff {

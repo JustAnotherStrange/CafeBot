@@ -45,11 +45,16 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
         {}: Scratch-Off Tier 3: {} monies
         {}: Increase hourly increase of money by 2: {} monies
         {}: Leave the shop.",
-        letters[0], ticket_price,
-        letters[1], tier1_price,
-        letters[2], tier2_price,
-        letters[3], tier3_price,
-        letters[4], incr_price,
+        letters[0],
+        ticket_price,
+        letters[1],
+        tier1_price,
+        letters[2],
+        tier2_price,
+        letters[3],
+        tier3_price,
+        letters[4],
+        incr_price,
         letters[5]
     );
     edit_embed(
@@ -108,7 +113,6 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                     return Ok(());
                 }
 
-
                 "👎" => {
                     match purchase(&msg.author, incr_price as u32).await {
                         Ok(_) => {
@@ -129,12 +133,11 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                                 "Nice try, but you don't have enough money to buy that.",
                                 "haha poor.",
                             )
-                                .await;
+                            .await;
                         }
                     };
                     return Ok(());
                 }
-
 
                 "✊" => {
                     match purchase(&msg.author, incr_price as u32).await {
@@ -156,12 +159,11 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                                 "Nice try, but you don't have enough money to buy that.",
                                 "haha poor.",
                             )
-                                .await;
+                            .await;
                         }
                     };
                     return Ok(());
                 }
-
 
                 "👍" => {
                     match purchase(&msg.author, incr_price as u32).await {
@@ -183,7 +185,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                                 "Nice try, but you don't have enough money to buy that.",
                                 "haha poor.",
                             )
-                                .await;
+                            .await;
                         }
                     };
                     return Ok(());
@@ -225,12 +227,10 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                     return Ok(());
                 }
 
-
                 "🛑" => {
                     edit_embed(&ctx, &mut message, "Goodbye!", "The shop is closed here.").await;
                     return Ok(());
                 }
-
 
                 _ => {} // if the reaction is none of the above, then do nothing.
             }
