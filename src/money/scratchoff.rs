@@ -1,12 +1,11 @@
 // use scratchoff tickets that are purchased in the shop
-// todo: there will be different tiers of scratch-offs, lose or gain more money.
-// todo: make new table in db: tickets, with a column for user id, tier 1 tickets, tier 2 tickets, ...
+// todo: probabilities
 use crate::database::database::{gen_connection, get_money, get_so, money_increment};
 use crate::money::blackjack::edit_embed;
 use crate::tools::help::EditContent;
 use rand::{thread_rng, Rng};
 use serenity::{
-    framework::standard::{macros::command, Args, CommandResult},
+    framework::standard::{macros::command, CommandResult},
     model::channel::Message,
     prelude::*,
 };
@@ -15,20 +14,34 @@ use std::time::Duration;
 #[command]
 async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
     let conn = gen_connection();
-
+    let user_so = get_so(&msg.author, &conn);
     // needed in order for embed to be a reply
-    let mut message = msg.reply(&ctx.http, "**Welcome to CafeBot!**").await?;
+    let mut message = msg
+        .reply(&ctx.http, "**Welcome to CafeBot Scratch-Off!**")
+        .await?;
+    edit_embed(&ctx, &mut message, "Loading...", "").await;
     // initial reactions
     let emojis: Vec<char> = vec!['🇦', '🇧', '🇨', '🛑'];
     for emoji in emojis.iter() {
         message.react(&ctx, *emoji).await?;
     }
     // initial embed message
+    let desc = format!("Please pick which tier you want to scratch off!
+    A - Tier 1 (You have {})
+    B - Tier 2 (You have {})
+    C - Tier 3 (You have {})
+
+    You can buy more scratch-off tickets in the shop using `^shop`.",
+    user_so.tier1, user_so.tier2, user_so.tier3);
+    let default_response = EditContent {
+        title: "__CafeBot Scratch-Off__".to_string(),
+        description: desc,
+    };
     edit_embed(
         &ctx,
         &mut message,
-        "__CafeBot Scratch-Off__",
-        "Please pick which tier you want to scratch off! Buy in the `^shop` and check how many you have in `^profile`.",
+        default_response.title.as_str(),
+        default_response.description.as_str(),
     )
     .await;
 
@@ -40,14 +53,7 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
             .await
         {
             let emoji = &reaction.as_inner_ref().emoji;
-            let mut response = EditContent {
-                title: "Pick which tier you want!
-                A - Tier 1
-                B - Tier 2
-                C - Tier 3"
-                    .to_string(),
-                description: "".to_string(),
-            };
+            let mut response = default_response.clone();
             // match on the reacted emoji
             // these breaks set the tier value to the number. didn't know you could do that until recently :o
             match emoji.as_data().as_str() {
@@ -92,7 +98,6 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
             return Ok(()); // end
         }
     };
-    let user_so = get_so(&msg.author, &conn);
     let so_amnt = match tier {
         1 => user_so.tier1,
         2 => user_so.tier2,
@@ -114,6 +119,8 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
     // generate amount of money. different tiers will just be multipliers on this amount.
     let r = thread_rng().gen_range(0..101);
     // gen weighted win amount
+    // todo: probabilities.
+    // I feel as if it is weighted to be too low, but I don't want the person's amount of money to trend up or down.
     let mut win_amount: i32;
     if r >= 0 && r <= 50 {
         win_amount = thread_rng().gen_range(0..50);
@@ -143,5 +150,6 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
         tier, win_amount
     );
     edit_embed(&ctx, &mut message, "Congratulations!", description.as_str()).await;
+    // todo: make you lose a ticket when you scratch it off and make you actually win the money
     Ok(())
 }

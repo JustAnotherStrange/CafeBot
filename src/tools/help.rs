@@ -6,6 +6,8 @@ use serenity::{
     prelude::*,
 };
 use std::time::Duration;
+
+#[derive(Clone)]
 pub struct EditContent {
     pub title: String,
     pub description: String,
