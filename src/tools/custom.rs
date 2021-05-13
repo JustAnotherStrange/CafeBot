@@ -57,6 +57,7 @@ async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 #[only_in(guilds)]
 #[aliases("r")]
 // run, list, and delete the custom commands created with ^custom
+#[allow(unreachable_code)] // because of weird warning
 async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let conn = gen_connection();
     let to_run = match args.single::<String>() {

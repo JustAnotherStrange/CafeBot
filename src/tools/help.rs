@@ -29,7 +29,7 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
         "Please pick a page.",
     )
     .await;
-    '_main: loop {
+    'main: loop {
         if let Some(reaction) = message
             .await_reaction(&ctx)
             .timeout(Duration::from_secs(120)) // after 120 seconds without reactions, it will go to the "else" statement.
@@ -96,7 +96,7 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
                         response.description.as_str(),
                     )
                     .await;
-                    return Ok(()); // end
+                    break 'main; // end
                 }
                 _ => {} // if the reaction is none of the above, then do nothing.
             }
@@ -110,9 +110,10 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
         } else {
             // gets here if there were no reactions for 120 seconds.
             help_edit_embed(ctx, &mut message, "Goodbye!", "This message is inactive.").await;
-            return Ok(()); // end
+            break 'main; // end
         }
     }
+    Ok(())
 }
 
 async fn help_edit_embed(ctx: &Context, message: &mut Message, title: &str, description: &str) {

@@ -96,7 +96,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                             .await;
                         }
                     };
-                    return Ok(());
+                    break 'main;
                 }
 
                 "✊" => {
@@ -122,7 +122,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                             .await;
                         }
                     };
-                    return Ok(());
+                    break 'main;
                 }
 
                 "👍" => {
@@ -148,7 +148,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                             .await;
                         }
                     };
-                    return Ok(());
+                    break 'main;
                 }
 
                 "📈" => {
@@ -184,12 +184,13 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                             .await;
                         }
                     };
-                    return Ok(());
+                    break 'main;
                 }
 
                 "🛑" => {
                     edit_embed(&ctx, &mut message, "Goodbye!", "The shop is closed here.").await;
-                    return Ok(());
+                    // return Ok(());
+                    break 'main;
                 }
 
                 _ => {} // if the reaction is none of the above, then do nothing.
@@ -201,7 +202,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
             return Ok(()); // close the shop
         }
     }
-    // Ok(())
+    Ok(())
 }
 
 async fn purchase(user: &User, price: u32) -> Result<(), ()> {
