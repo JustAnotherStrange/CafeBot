@@ -49,13 +49,17 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
     .await;
 
     // Reaction awaiting loop
-    let tier: i32 = '_main: loop {
+    let tier: i32 = 'main: loop {
         if let Some(reaction) = message
             .await_reaction(&ctx)
             .timeout(Duration::from_secs(60)) // after 120 seconds without reactions, it will go to the "else" statement.
             .await
         {
             let emoji = &reaction.as_inner_ref().emoji;
+            let reacted = &*reaction.as_inner_ref().clone();
+            if reacted.user(&ctx).await? != msg.author {
+                continue 'main; // make it so only the author can use the tickets
+            }
             let mut response = default_response.clone();
             // match on the reacted emoji
             // these breaks set the tier value to the number. didn't know you could do that until recently :o
