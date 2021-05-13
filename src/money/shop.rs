@@ -2,7 +2,7 @@ use crate::database::database::{
     create_user_if_not_exist, gen_connection, get_incr_amount, get_money,
 };
 use crate::money::blackjack::edit_embed;
-use rusqlite::{params, Connection};
+use rusqlite::params;
 use serenity::{
     framework::standard::{macros::command, CommandResult},
     model::{channel::Message, user::User},
@@ -26,36 +26,32 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
             })
         })
         .await?;
-    let letters: Vec<char> = vec!['🎫', '👎', '✊', '👍', '📈', '🛑']; // ticket
+    // tier reactions
+    let letters: Vec<char> = vec!['👎', '✊', '👍', '📈', '🛑']; // ticket
 
     for letter in letters.iter() {
         message.react(ctx, *letter).await?;
     }
-    let ticket_amnt = get_amount_of_tickets(&msg.author, &conn)?;
-    let ticket_price: u32 = 100 * (2_u32.pow(ticket_amnt));
     let incr_amnt = get_incr_amount(&msg.author, &conn);
     let incr_price = 10 * incr_amnt.pow(2) + 200;
-    let tier1_price = 200; // todo: may change
+    let tier1_price = 200;
     let tier2_price = 400;
     let tier3_price = 800;
     let description = format!(
-        "{}: Ticket: {} monies
-        {}: Scratch-Off Tier 1: {} monies
+        "{}: Scratch-Off Tier 1: {} monies
         {}: Scratch-Off Tier 2: {} monies
         {}: Scratch-Off Tier 3: {} monies
         {}: Increase hourly increase of money by 2: {} monies
         {}: Leave the shop.",
         letters[0],
-        ticket_price,
-        letters[1],
         tier1_price,
-        letters[2],
+        letters[1],
         tier2_price,
-        letters[3],
+        letters[2],
         tier3_price,
-        letters[4],
+        letters[3],
         incr_price,
-        letters[5]
+        letters[4]
     );
     edit_embed(
         &ctx,
@@ -77,42 +73,6 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
             }
             // match on the reacted emoji
             match emoji.as_data().as_str() {
-                "🎫" => {
-                    if get_amount_of_tickets(&msg.author, &conn)? >= 5 {
-                        edit_embed(
-                            &ctx,
-                            &mut message,
-                            "You have hit the maximum amount of tickets.",
-                            "Please wait until the next drawing to purchase more tickets.",
-                        )
-                        .await;
-                        return Ok(());
-                    }
-                    match purchase(&msg.author, ticket_price).await {
-                        Ok(_) => {
-                            conn.execute(
-                                "update users set tickets = tickets + 1 where id = ?1",
-                                params![msg.author.id.as_u64()],
-                            )?;
-                            let description = format!(
-                                "You purchased a **ticket** for **{}** monies.",
-                                ticket_price
-                            );
-                            edit_embed(&ctx, &mut message, "Success!", &*description).await;
-                        }
-                        Err(_) => {
-                            edit_embed(
-                                &ctx,
-                                &mut message,
-                                "Nice try, but you don't have enough money to buy that.",
-                                "haha poor.",
-                            )
-                            .await;
-                        }
-                    };
-                    return Ok(());
-                }
-
                 "👎" => {
                     match purchase(&msg.author, tier1_price as u32).await {
                         Ok(_) => {
@@ -121,7 +81,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                                 params![msg.author.id.as_u64()],
                             )?;
                             let description = format!(
-                                "You bought a Tier 1 Scratch-Off Ticket for **{}** monies.",
+                                "You bought a Tier 1 Scratch-Off Ticket for **{}** monies. Use it with `^scratchoff`.",
                                 tier1_price
                             );
                             edit_embed(&ctx, &mut message, "Success!", &*description).await;
@@ -147,7 +107,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                                 params![msg.author.id.as_u64()],
                             )?;
                             let description = format!(
-                                "You bought a Tier 2 Scratch-Off Ticket for **{}** monies.",
+                                "You bought a Tier 2 Scratch-Off Ticket for **{}** monies. Use it with `^scratchoff`.",
                                 tier2_price
                             );
                             edit_embed(&ctx, &mut message, "Success!", &*description).await;
@@ -173,7 +133,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                                 params![msg.author.id.as_u64()],
                             )?;
                             let description = format!(
-                                "You bought a Tier 3 Scratch-Off Ticket for **{}** monies.",
+                                "You bought a Tier 3 Scratch-Off Ticket for **{}** monies. Use it with `^scratchoff`.",
                                 tier3_price
                             );
                             edit_embed(&ctx, &mut message, "Success!", &*description).await;
@@ -242,17 +202,6 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
         }
     }
     // Ok(())
-}
-
-pub fn get_amount_of_tickets(user: &User, conn: &Connection) -> Result<u32, rusqlite::Error> {
-    create_user_if_not_exist(&user, &conn).unwrap();
-    // let mut stmt = conn.prepare("select money from users where id = ?1")?;
-    let money = conn.query_row(
-        "select tickets from users where id = ?1",
-        params![user.id.as_u64()],
-        |row| Ok(row.get(0)?),
-    );
-    return money;
 }
 
 async fn purchase(user: &User, price: u32) -> Result<(), ()> {

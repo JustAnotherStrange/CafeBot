@@ -71,9 +71,27 @@ async fn blackjack_engine(
     let mut hand2: Vec<usize> = Vec::new();
     hand1.push(deck.pop().unwrap());
     hand1.push(deck.pop().unwrap());
-    hand2.push(deck.pop().unwrap());
-    hand2.push(deck.pop().unwrap());
-    // let mut sum1: usize = hand1.iter().sum();
+    // hand2.push(deck.pop().unwrap());
+    // hand2.push(deck.pop().unwrap());
+    hand2.push(11);
+    hand2.push(11);
+    // fixes the infamous 22 bug
+    if hand1[0] == 11 && hand1[1] == 11 {
+        'deck1: for i in hand1.iter_mut() {
+            if i == &11 {
+                *i = 1;
+                break 'deck1;
+            }
+        }
+    }
+    if hand2[0] == 11 && hand2[1] == 11 {
+        'deck2: for i in hand2.iter_mut() {
+            if i == &11 {
+                *i = 1;
+                break 'deck2;
+            }
+        }
+    }
     let mut sum1: usize;
     let mut sum2: usize = hand2.iter().sum();
 

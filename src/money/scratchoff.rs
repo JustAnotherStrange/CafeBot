@@ -12,6 +12,7 @@ use serenity::{
 use std::time::Duration;
 
 #[command]
+#[aliases("so")]
 async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
     let conn = gen_connection();
     let user_so = get_so(&msg.author, &conn);
@@ -111,7 +112,7 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
             &ctx,
             &mut message,
             "You don't have any of that ticket tier!",
-            "Nice try.",
+            "You can buy some in the shop using `^shop`.",
         )
         .await;
         return Ok(());
@@ -121,25 +122,16 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
     // generate amount of money. different tiers will just be multipliers on this amount.
     let r = thread_rng().gen_range(0..101);
     // gen weighted win amount
-    // todo: probabilities.
     // I feel as if it is weighted to be too low, but I don't want the person's amount of money to trend up or down.
     let mut win_amount: i32;
-    if r >= 0 && r <= 50 {
-        win_amount = thread_rng().gen_range(0..100);
-    } else if r >= 51 && r <= 75 {
-        win_amount = thread_rng().gen_range(100..150);
-    } else if r >= 76 && r <= 85 {
-        win_amount = thread_rng().gen_range(150..200);
-    } else if r >= 86 && r <= 92 {
-        win_amount = thread_rng().gen_range(250..300);
-    } else if r >= 93 && r <= 95 {
-        win_amount = thread_rng().gen_range(300..350);
-    } else if r >= 96 && r <= 98 {
-        win_amount = thread_rng().gen_range(350..400);
-    } else if r == 99 {
-        win_amount = thread_rng().gen_range(400..450);
-    } else {
-        win_amount = 500;
+    win_amount = match r {
+        0..=33 => thread_rng().gen_range(0..100),
+        0..=67 => thread_rng().gen_range(100..200),
+        68..=89 => thread_rng().gen_range(200..300),
+        90..=96 => thread_rng().gen_range(300..350),
+        97..=99 => thread_rng().gen_range(350..400),
+        100 => 500,
+        _ => unreachable!(), // shouldnt be possible
     };
     win_amount = match tier {
         1 => win_amount,

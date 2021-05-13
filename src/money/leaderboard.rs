@@ -36,6 +36,11 @@ async fn leaderboard(ctx: &Context, msg: &Message, mut args: Args) -> CommandRes
             }
         );
         index += 1;
+
+        // only display top 10 people
+        if index == 10 {
+            break;
+        }
         response.push_str(&*to_push);
     }
     msg.channel_id

@@ -1,5 +1,5 @@
 pub mod blackjack;
-pub mod coin_flip;
+pub mod coinflip;
 pub mod daily;
 pub mod give;
 pub mod interest;
