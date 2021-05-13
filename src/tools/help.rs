@@ -174,4 +174,4 @@ const ADMIN: &str = "\
 
 const FOOTER: &str = "\
 Key: 🔧 - tools, ✂ - message modification, 💲 - money, 🌐 - miscellaneous, 🤴 - admin.
-CafeBot v0.8.3: https://github.com/JustAnotherStrange/CafeBot";
+CafeBot v0.9.0: https://github.com/JustAnotherStrange/CafeBot";
