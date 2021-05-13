@@ -9,8 +9,8 @@ use serenity::{
 use crate::database::database::{get_money, money_increment};
 
 #[command]
-#[aliases("coinflip")]
-async fn coin_flip(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+#[aliases("cf")]
+async fn coinflip(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let bet: i32 = match args.rest().trim().parse() {
         Ok(x) => x,
         Err(_) => {

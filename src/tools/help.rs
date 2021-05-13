@@ -1,4 +1,4 @@
-// Simple help command.
+// Help command that uses embeds + reaction navigation
 use crate::admin::admin_test::is_admin;
 use serenity::{
     framework::standard::{macros::command, CommandResult},
@@ -6,9 +6,11 @@ use serenity::{
     prelude::*,
 };
 use std::time::Duration;
-struct EditContent {
-    title: String,
-    description: String,
+
+#[derive(Clone)]
+pub struct EditContent {
+    pub title: String,
+    pub description: String,
 }
 
 #[command]
@@ -147,12 +149,14 @@ const MESSAGE_MODIFICATION: &str = "\
 const MONEY: &str = "\
 `^wallet` - see how much money you have.
 `^daily` - run this daily to maintain a streak. forgetting one day will result in a reset.
-`^coin_flip [bet]` - flip a coin for money.
+`^coinflip [^cf] [bet]` - flip a coin for money.
 `^blackjack [^bj] [bet]` - play blackjack for money.
+`^shop` - buy an assorted items using your money
 `^give_money [^give] [amount] [recipient]` - give money to someone.
 `^rockpaperscissors [^rps] [move] [bet]` - play rock paper scissors! example: ^rps rock 50
-`^leaderboard [choice]` - get a leaderboard. available options are currently 'money' and 'daily'.
-`^pool` - see the pool for your server. its usage will soon be changed, right now it is 1/4th of all lost money";
+`^leaderboard [^lb] [choice]` - get a leaderboard. available options are currently 'money' and 'daily'.
+`^pool` - see the pool for your server. its usage will soon be changed, right now it is 1/4th of all lost money
+`^scratchoff [^so]` - scratch off tickets that are bought in the shop. there are three different tiers, each with possible winnings proportional to their cost.";
 
 const MISC: &str = "\
 `^count` - count as high as you can
