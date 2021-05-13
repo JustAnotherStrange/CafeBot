@@ -1,9 +1,9 @@
 // use scratchoff tickets that are purchased in the shop
-// todo: probabilities
-use crate::database::database::{gen_connection, get_money, get_so, money_increment};
+use crate::database::database::{gen_connection, get_so, money_increment};
 use crate::money::blackjack::edit_embed;
 use crate::tools::help::EditContent;
 use rand::{thread_rng, Rng};
+use rusqlite::params;
 use serenity::{
     framework::standard::{macros::command, CommandResult},
     model::channel::Message,
@@ -26,13 +26,15 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
         message.react(&ctx, *emoji).await?;
     }
     // initial embed message
-    let desc = format!("Please pick which tier you want to scratch off!
+    let desc = format!(
+        "Please pick which tier you want to scratch off!
     A - Tier 1 (You have {})
     B - Tier 2 (You have {})
     C - Tier 3 (You have {})
 
     You can buy more scratch-off tickets in the shop using `^shop`.",
-    user_so.tier1, user_so.tier2, user_so.tier3);
+        user_so.tier1, user_so.tier2, user_so.tier3
+    );
     let default_response = EditContent {
         title: "__CafeBot Scratch-Off__".to_string(),
         description: desc,
@@ -123,21 +125,21 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
     // I feel as if it is weighted to be too low, but I don't want the person's amount of money to trend up or down.
     let mut win_amount: i32;
     if r >= 0 && r <= 50 {
-        win_amount = thread_rng().gen_range(0..50);
+        win_amount = thread_rng().gen_range(0..100);
     } else if r >= 51 && r <= 75 {
-        win_amount = thread_rng().gen_range(50..100);
-    } else if r >= 76 && r <= 85 {
         win_amount = thread_rng().gen_range(100..150);
-    } else if r >= 86 && r <= 92 {
+    } else if r >= 76 && r <= 85 {
         win_amount = thread_rng().gen_range(150..200);
-    } else if r >= 93 && r <= 95 {
-        win_amount = thread_rng().gen_range(200..250);
-    } else if r >= 96 && r <= 98 {
+    } else if r >= 86 && r <= 92 {
         win_amount = thread_rng().gen_range(250..300);
-    } else if r == 99 {
+    } else if r >= 93 && r <= 95 {
         win_amount = thread_rng().gen_range(300..350);
+    } else if r >= 96 && r <= 98 {
+        win_amount = thread_rng().gen_range(350..400);
+    } else if r == 99 {
+        win_amount = thread_rng().gen_range(400..450);
     } else {
-        win_amount = 400;
+        win_amount = 500;
     };
     win_amount = match tier {
         1 => win_amount,
@@ -145,11 +147,33 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
         3 => win_amount * 4,
         _ => unreachable!(), // same situation as the previous unreachable.
     };
+
+    // take away the ticket they used
+    match tier {
+        1 => conn.execute(
+            "update users set so_tier1 = so_tier1 - 1 where id = ?1",
+            params![&msg.author.id.as_u64()],
+        )?,
+        2 => conn.execute(
+            "update users set so_tier2 = so_tier2 - 1 where id = ?1",
+            params![&msg.author.id.as_u64()],
+        )?,
+        3 => conn.execute(
+            "update users set so_tier3 = so_tier3 - 1 where id = ?1",
+            params![&msg.author.id.as_u64()],
+        )?,
+        _ => return Ok(()), // this should never be reached, but unreachable!() complains about return types of match arms
+    };
+    // give user the money they won
+    money_increment(
+        &msg.author,
+        msg.guild_id.unwrap().as_u64().clone(),
+        win_amount,
+    )?;
     let description = format!(
         "Your **Tier {} Scratch-Off Ticket** won you **{}** monies!",
         tier, win_amount
     );
     edit_embed(&ctx, &mut message, "Congratulations!", description.as_str()).await;
-    // todo: make you lose a ticket when you scratch it off and make you actually win the money
     Ok(())
 }

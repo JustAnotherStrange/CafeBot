@@ -1,4 +1,6 @@
-use crate::database::database::{gen_connection, get_incr_amount, get_money, get_so};
+use crate::database::database::{
+    create_user_if_not_exist, gen_connection, get_incr_amount, get_money, get_so,
+};
 use crate::money::daily::get_daily_user;
 use crate::money::shop::get_amount_of_tickets;
 use serenity::{
@@ -13,6 +15,7 @@ use serenity::{
 async fn profile(ctx: &Context, msg: &Message) -> CommandResult {
     let conn = gen_connection();
     let user = &msg.author;
+    create_user_if_not_exist(&user, &conn).unwrap();
     let money = get_money(user).unwrap();
     let tickets = get_amount_of_tickets(user, &conn).unwrap();
     let incr_amount = get_incr_amount(user, &conn);

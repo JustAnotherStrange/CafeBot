@@ -114,7 +114,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                 }
 
                 "👎" => {
-                    match purchase(&msg.author, incr_price as u32).await {
+                    match purchase(&msg.author, tier1_price as u32).await {
                         Ok(_) => {
                             conn.execute(
                                 "update users set so_tier1 = so_tier1 + 1 where id = ?1",
@@ -140,7 +140,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                 }
 
                 "✊" => {
-                    match purchase(&msg.author, incr_price as u32).await {
+                    match purchase(&msg.author, tier2_price as u32).await {
                         Ok(_) => {
                             conn.execute(
                                 "update users set so_tier2 = so_tier2 + 1 where id = ?1",
@@ -166,7 +166,7 @@ async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
                 }
 
                 "👍" => {
-                    match purchase(&msg.author, incr_price as u32).await {
+                    match purchase(&msg.author, tier3_price as u32).await {
                         Ok(_) => {
                             conn.execute(
                                 "update users set so_tier3 = so_tier3 + 1 where id = ?1",
