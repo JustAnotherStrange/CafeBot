@@ -102,3 +102,16 @@ pub fn get_daily_user(user: &User) -> Option<Daily> {
         .unwrap();
     // the .optional() makes it return an Option, which can be used to check if there is or is not a row with the specified params
 }
+
+pub fn get_daily_streak(user: &User) -> Option<u32> {
+    let conn = gen_connection();
+    let mut stmt = conn.prepare("select * from daily where id = ?1").ok()?;
+    return stmt
+        .query_row(params![user.id.as_u64()], |row| {
+            Ok(
+                row.get(2)?,
+            )
+        })
+        .optional()
+        .unwrap();
+}
