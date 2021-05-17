@@ -107,11 +107,7 @@ pub fn get_daily_streak(user: &User) -> Option<u32> {
     let conn = gen_connection();
     let mut stmt = conn.prepare("select * from daily where id = ?1").ok()?;
     return stmt
-        .query_row(params![user.id.as_u64()], |row| {
-            Ok(
-                row.get(2)?,
-            )
-        })
+        .query_row(params![user.id.as_u64()], |row| Ok(row.get(2)?))
         .optional()
         .unwrap();
 }

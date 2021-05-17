@@ -73,8 +73,6 @@ async fn blackjack_engine(
     hand1.push(deck.pop().unwrap());
     hand2.push(deck.pop().unwrap());
     hand2.push(deck.pop().unwrap());
-    // hand2.push(11);
-    // hand2.push(11);
     // fixes the infamous 22 bug
     if hand1[0] == 11 && hand1[1] == 11 {
         'deck1: for i in hand1.iter_mut() {
@@ -93,7 +91,7 @@ async fn blackjack_engine(
         }
     }
     let mut sum1: usize;
-    let mut sum2: usize = hand2.iter().sum();
+    let mut sum2: usize;
 
     // Bot's reactions, so the user knows what to do.
     message
@@ -179,6 +177,7 @@ async fn blackjack_engine(
         // Checks
         sleep(quarter_second); // necessary? yeah, i think so.
         sum1 = hand1.iter().sum(); // update player sum
+        sum2 = hand2.iter().sum();
 
         // i think this big chunk of checks the same as is in the 'not_stay while loop. hm.
         if sum1 > 21 {
@@ -198,6 +197,10 @@ async fn blackjack_engine(
                 break;
             }
         } else if sum1 == 21 {
+            if sum2 == 21 {
+                tie(ctx, message, hand1, hand2).await;
+                return Ok(());
+            }
             edit_embed(ctx, message, "Blackjack!", "Blackjack!").await;
             sleep(Duration::from_millis(500));
             player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet * 2).await;
@@ -207,7 +210,7 @@ async fn blackjack_engine(
         // dealer turn
         if sum2 < 17 {
             hand2.push(deck.pop().unwrap()); // deal a card from deck
-            // update status
+                                             // update status
             let new_title = format_game_status(None, hand1.clone(), hand2.clone(), true);
             edit_embed(ctx, message, new_title.as_str(), "Dealer's turn.").await;
         } else if sum2 >= 17 {
@@ -218,7 +221,6 @@ async fn blackjack_engine(
                         if i == &11 {
                             *i = 1;
                             break; // breaks big loop, because outside of while loop.
-                            // todo: does this work?
                         }
                     }
                 }
@@ -230,7 +232,9 @@ async fn blackjack_engine(
                 // this can probably be simplified.
                 match test_win(hand1.clone(), hand2.clone()).as_str() {
                     "win" => player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await,
-                    "lose" => dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await,
+                    "lose" => {
+                        dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await
+                    }
                     "tie" => tie(ctx, message, hand1, hand2).await,
                     _ => {}
                 }
@@ -241,6 +245,7 @@ async fn blackjack_engine(
 
         // Final checks
         // Same checks again!?!? Me one month ago writing the engine for this was being pretty bald ngl.
+        sum1 = hand1.iter().sum();
         sum2 = hand2.iter().sum();
         if sum2 > 21 {
             // 11 checking.
@@ -257,6 +262,10 @@ async fn blackjack_engine(
             player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
             break;
         } else if sum2 == 21 {
+            if sum1 == 21 {
+                tie(ctx, message, hand1, hand2).await;
+                return Ok(());
+            }
             edit_embed(
                 ctx,
                 message,
