@@ -207,20 +207,30 @@ async fn blackjack_engine(
         // dealer turn
         if sum2 < 17 {
             hand2.push(deck.pop().unwrap()); // deal a card from deck
-                                             // update status
+            // update status
             let new_title = format_game_status(None, hand1.clone(), hand2.clone(), true);
             edit_embed(ctx, message, new_title.as_str(), "Dealer's turn.").await;
         } else if sum2 >= 17 {
+            if sum2 > 21 {
+                // if there is an ace as an 11, change it to a 1.
+                if hand1.contains(&11) {
+                    for i in hand1.iter_mut() {
+                        if i == &11 {
+                            *i = 1;
+                            break; // breaks big loop, because outside of while loop.
+                            // todo: does this work?
+                        }
+                    }
+                }
+            }
             // Dealer has to stay at greater or equal to 17.
             edit_embed(ctx, message, "The dealer stays.", "The dealer stays.").await;
             sleep(quarter_second);
             if stay {
                 // this can probably be simplified.
-                match test_win(hand1.clone(), hand2.clone()) {
+                match test_win(hand1.clone(), hand2.clone()).as_str() {
                     "win" => player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await,
-                    "lose" => {
-                        dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await
-                    }
+                    "lose" => dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await,
                     "tie" => tie(ctx, message, hand1, hand2).await,
                     _ => {}
                 }
@@ -329,18 +339,18 @@ fn format_game_status(
 // Ending functions
 
 // This function may not be necessary. It is only called once.
-fn test_win(hand1: Vec<usize>, hand2: Vec<usize>) -> &'static str {
+fn test_win(hand1: Vec<usize>, hand2: Vec<usize>) -> String {
     // true if player wins, false if computer wins
     let sum1: usize = hand1.iter().sum();
     let sum2: usize = hand2.iter().sum();
     if sum1 > sum2 {
-        return "win";
+        return "win".to_string();
     } else if sum1 < sum2 {
-        return "lose";
+        return "lose".to_string();
     } else if sum1 == sum2 {
-        return "tie";
+        return "tie".to_string();
     }
-    "tie"
+    "tie".to_string()
 }
 
 // Winning, losing, and tie functions
