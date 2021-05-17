@@ -156,7 +156,7 @@ const MONEY: &str = "\
 `^give_money [^give] [amount] [recipient]` - give money to someone.
 `^rockpaperscissors [^rps] [move] [bet]` - play rock paper scissors! example: ^rps rock 50
 `^leaderboard [^lb] [choice]` - get a leaderboard. available options are currently 'money' and 'daily'.
-`^pool` - see the pool for your server. its usage will soon be changed, right now it is 1/4th of all lost money
+`^stats` - see money-related stats for your server
 `^scratchoff [^so]` - scratch off tickets that are bought in the shop. there are three different tiers, each with possible winnings proportional to their cost.";
 
 const MISC: &str = "\
@@ -175,4 +175,4 @@ const ADMIN: &str = "\
 
 const FOOTER: &str = "\
 Key: 🔧 - tools, ✂ - message modification, 💲 - money, 🌐 - miscellaneous, 🤴 - admin.
-CafeBot v0.9.1: https://github.com/JustAnotherStrange/CafeBot";
+CafeBot v0.10.0: https://github.com/JustAnotherStrange/CafeBot";

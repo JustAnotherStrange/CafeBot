@@ -18,7 +18,7 @@ use database::database::db_init;
 use message_change::{owo::*, sarcasm::*, say::*};
 use misc::{bruh::*, count::*, dice::*, game::*, hair::*, tictactoe::*, zote::*};
 use money::{
-    blackjack::*, coinflip::*, daily::*, give::*, leaderboard::*, money::*, pool::*, rps::*,
+    blackjack::*, coinflip::*, daily::*, give::*, leaderboard::*, money::*, stats::*, rps::*,
     scratchoff::*, shop::*,
 };
 use tools::{custom::*, help::*, latency::*, ping::*, profile::*, wiki::*, xkcd::*};
@@ -67,7 +67,7 @@ struct Handler;
     give_money,
     blackjack,
     leaderboard,
-    pool,
+    stats,
     shop,
     profile,
     tictactoe,
