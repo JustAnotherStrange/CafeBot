@@ -71,10 +71,10 @@ async fn blackjack_engine(
     let mut hand2: Vec<usize> = Vec::new();
     hand1.push(deck.pop().unwrap());
     hand1.push(deck.pop().unwrap());
-    // hand2.push(deck.pop().unwrap());
-    // hand2.push(deck.pop().unwrap());
-    hand2.push(11);
-    hand2.push(11);
+    hand2.push(deck.pop().unwrap());
+    hand2.push(deck.pop().unwrap());
+    // hand2.push(11);
+    // hand2.push(11);
     // fixes the infamous 22 bug
     if hand1[0] == 11 && hand1[1] == 11 {
         'deck1: for i in hand1.iter_mut() {
