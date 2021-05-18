@@ -4,6 +4,7 @@ pub mod daily;
 pub mod give;
 pub mod interest;
 pub mod leaderboard;
+pub mod lootbox;
 pub mod money;
 pub mod rps;
 pub mod scratchoff;

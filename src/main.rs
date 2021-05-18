@@ -18,8 +18,8 @@ use database::database::db_init;
 use message_change::{owo::*, sarcasm::*, say::*};
 use misc::{bruh::*, count::*, dice::*, game::*, hair::*, tictactoe::*, zote::*};
 use money::{
-    blackjack::*, coinflip::*, daily::*, give::*, leaderboard::*, money::*, rps::*, scratchoff::*,
-    shop::*,
+    blackjack::*, coinflip::*, daily::*, give::*, leaderboard::*, lootbox::*, money::*, rps::*,
+    scratchoff::*, shop::*,
 };
 use tools::{custom::*, help::*, latency::*, ping::*, profile::*, stats::*, wiki::*, xkcd::*};
 
@@ -71,7 +71,8 @@ struct Handler;
     shop,
     profile,
     tictactoe,
-    scratchoff
+    scratchoff,
+    lootbox
 )]
 
 struct General;
