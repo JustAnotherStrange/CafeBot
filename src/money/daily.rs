@@ -1,5 +1,4 @@
 // run daily to try to keep up a streak.
-use crate::database::database::{gen_connection, money_increment};
 use chrono::{prelude::*, Duration};
 use rusqlite::{params, OptionalExtension};
 use serenity::{
@@ -7,11 +6,15 @@ use serenity::{
     model::prelude::*,
     prelude::*,
 };
+
+use crate::database::database::{gen_connection, money_increment};
+
 pub struct Daily {
     pub id: u64,
     pub date: String,
     pub streak: u32,
 }
+
 #[command]
 async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
     let conn = gen_connection();
@@ -89,25 +92,19 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
 // Get user from db as Daily struct.
 pub fn get_daily_user(user: &User) -> Option<Daily> {
     let conn = gen_connection();
-    let mut stmt = conn.prepare("select * from daily where id = ?1").ok()?;
-    return stmt
-        .query_row(params![user.id.as_u64()], |row| {
-            Ok(Daily {
-                id: row.get(0)?,
-                date: row.get(1)?,
-                streak: row.get(2)?,
-            })
-        })
+    return conn
+        .query_row(
+            "select * from daily where id = ?1",
+            params![user.id.as_u64()],
+            |row| {
+                Ok(Daily {
+                    id: row.get(0)?,
+                    date: row.get(1)?,
+                    streak: row.get(2)?,
+                })
+            },
+        )
         .optional()
         .unwrap();
     // the .optional() makes it return an Option, which can be used to check if there is or is not a row with the specified params
-}
-
-pub fn get_daily_streak(user: &User) -> Option<u32> {
-    let conn = gen_connection();
-    let mut stmt = conn.prepare("select * from daily where id = ?1").ok()?;
-    return stmt
-        .query_row(params![user.id.as_u64()], |row| Ok(row.get(2)?))
-        .optional()
-        .unwrap();
 }

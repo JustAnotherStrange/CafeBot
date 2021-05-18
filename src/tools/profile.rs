@@ -1,7 +1,6 @@
 use crate::database::database::{
-    create_user_if_not_exist, gen_connection, get_incr_amount, get_money, get_so,
+    create_user_if_not_exist, gen_connection, get_daily_streak, get_incr_amount, get_money, get_so,
 };
-use crate::money::daily::get_daily_streak;
 use serenity::{
     framework::standard::{macros::command, CommandResult},
     http::AttachmentType,
@@ -11,6 +10,7 @@ use serenity::{
 
 #[command]
 #[only_in(guilds)]
+#[aliases("inventory, inv")]
 async fn profile(ctx: &Context, msg: &Message) -> CommandResult {
     // let you check profile of other users
     let mentions = &msg.mentions;

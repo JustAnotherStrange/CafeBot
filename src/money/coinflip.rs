@@ -1,4 +1,8 @@
 // Feed people's gambling addictions
+use crate::{
+    database::database::{gen_connection, get_money, money_increment},
+    tools::stats::init_stats_if_necessary,
+};
 use rand::{thread_rng, Rng};
 use serenity::{
     client::Context,
@@ -6,11 +10,14 @@ use serenity::{
     model::channel::Message,
 };
 
-use crate::database::database::{get_money, money_increment};
-
 #[command]
 #[aliases("cf")]
 async fn coinflip(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    // increase game counter
+    let conn = gen_connection();
+    init_stats_if_necessary(&conn);
+    conn.execute("update stats set coin_flips = coin_flips + 1", [])?;
+
     let bet: i32 = match args.rest().trim().parse() {
         Ok(x) => x,
         Err(_) => {

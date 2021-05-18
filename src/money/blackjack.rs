@@ -1,6 +1,9 @@
 // play blackjack for money
 // All throughout: `msg` variable is the message the user sent, and `message` is the one the bot sent.
-use crate::database::database::{get_money, money_increment};
+use crate::{
+    database::database::{gen_connection, get_money, money_increment},
+    tools::stats::init_stats_if_necessary,
+};
 use rand::{seq::SliceRandom, thread_rng};
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
@@ -14,6 +17,10 @@ use std::{thread::sleep, time, time::Duration};
 #[only_in(guilds)]
 #[aliases("bj")]
 async fn blackjack(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    // increase game counter
+    let conn = gen_connection();
+    init_stats_if_necessary(&conn);
+    conn.execute("update stats set blackjacks = blackjacks + 1", [])?;
     // parse bet amount
     let bet: i32 = match args.rest().trim().parse() {
         Ok(x) => x,

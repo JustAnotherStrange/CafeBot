@@ -134,7 +134,7 @@ async fn help_edit_embed(ctx: &Context, message: &mut Message, title: &str, desc
 const TOOLS: &str = "\
 `^help` - show help pages. navigate through reactions
 `^ping` - pong
-`^profile` - show information about your user in the database
+`^profile [^inventory] [^inv]` - show information about your user in the database
 `^latency` - see latency to bot host.
 `^custom` - create a custom command. e.g. '^custom bruh bruh moment'.
 `^run [^r]` - run a custom command. e.g. '^r bruh'. Do '^r [command name] delete' to delete one (admin only) or '^r list' to list available commands.
@@ -175,4 +175,4 @@ const ADMIN: &str = "\
 
 const FOOTER: &str = "\
 Key: 🔧 - tools, ✂ - message modification, 💲 - money, 🌐 - miscellaneous, 🤴 - admin.
-CafeBot v0.10.0: https://github.com/JustAnotherStrange/CafeBot";
+CafeBot v0.10.1: https://github.com/JustAnotherStrange/CafeBot";

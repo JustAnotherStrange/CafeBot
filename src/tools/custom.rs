@@ -1,7 +1,9 @@
 // Make, list, delete, and run custom commands that are unique to each server
-use crate::admin::admin_test::is_admin;
-use crate::database::database::{db_init, gen_connection};
-use crate::sarcastify;
+use crate::{
+    admin::admin_test::is_admin,
+    database::database::{db_init, gen_connection},
+    sarcastify,
+};
 use owoify_rs::{Owoifiable, OwoifyLevel};
 use rusqlite::{params, OptionalExtension};
 use serenity::{
@@ -15,7 +17,7 @@ use serenity::{
 // create custom commands
 async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     db_init()?; // will create customs table if not exist
-    let guildid = msg.guild_id.unwrap().as_u64().clone();
+    let guild_id = msg.guild_id.unwrap().as_u64().clone();
     // Argument parsing
     let command_name = match args.single::<String>() {
         Ok(x) => x,
@@ -30,7 +32,7 @@ async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         }
     };
     // does command already exist?
-    if does_command_exist(guildid, command_name.clone()) {
+    if does_command_exist(guild_id, command_name.clone()) {
         msg.reply(&ctx.http, "That command already exists.").await?;
         return Ok(());
     }
@@ -41,7 +43,7 @@ async fn custom(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     conn.execute(
         // add new command to database
         "insert or ignore into customs values (?1, ?2, ?3)",
-        params![guildid, command_name, command_output],
+        params![guild_id, command_name, command_output],
     )?;
 
     // complete!
@@ -72,11 +74,11 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             return Ok(());
         }
     };
-    let guildid = msg.guild_id.unwrap().as_u64().clone();
+    let guild_id = msg.guild_id.unwrap().as_u64().clone();
     // list commands
     if to_run == "list" {
-        let commands = get_list_of_commands(guildid); // get formatted list of commands from function
-                                                      // send the list in a nice embed
+        let commands = get_list_of_commands(guild_id); // get formatted list of commands from function
+                                                       // send the list in a nice embed
         msg.channel_id
             .send_message(&ctx.http, |m| {
                 m.content("**Custom commands for this server:**");
@@ -91,7 +93,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     }
 
     // get the command's output
-    let command_output = match get_command_output(guildid, to_run.clone()) {
+    let command_output = match get_command_output(guild_id, to_run.clone()) {
         Some(x) => x,
         None => {
             // Command doesn't exist
@@ -120,8 +122,10 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         if is_admin(ctx, msg).await {
             conn.execute(
                 "delete from customs where guild_id = ?1 and name = ?2",
-                params![guildid, to_run],
+                params![guild_id, to_run],
             )?;
+            let response = format!("Successfully deleted the custom command `{}`.", to_run);
+            msg.reply(&ctx.http, response.as_str()).await?;
         } else {
             msg.reply(
                 &ctx.http,
@@ -186,13 +190,14 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 }
 
 // Check if a command exists.
-fn does_command_exist(guildid: u64, command_name: String) -> bool {
+fn does_command_exist(guild_id: u64, command_name: String) -> bool {
     let conn = gen_connection();
-    let mut statement = conn
-        .prepare("select * from customs where guild_id = ?1 and name = ?2")
-        .unwrap();
-    let query: Option<String> = statement
-        .query_row(params![guildid, command_name], |row| Ok(row.get(1)?))
+    let query: Option<String> = conn
+        .query_row(
+            "select * from customs where guild_id = ?1 and name = ?2",
+            params![guild_id, command_name],
+            |row| Ok(row.get(1)?),
+        )
         .optional()
         .unwrap();
     // the .optional() makes it return an Option, which can be used to check if there is or is not a row with the specified params
@@ -203,28 +208,29 @@ fn does_command_exist(guildid: u64, command_name: String) -> bool {
 }
 
 // Get command output from a guild id and name
-fn get_command_output(guildid: u64, command_name: String) -> Option<String> {
+fn get_command_output(guild_id: u64, command_name: String) -> Option<String> {
     // Overall pretty simple "Read the thing to a variable."
     // I wonder if there's a simpler way to do this.
     let conn = gen_connection();
-    let mut statement = conn
-        .prepare("select * from customs where guild_id = ?1 and name = ?2")
-        .unwrap();
-    return statement
-        .query_row(params![guildid, command_name], |row| Ok(row.get(2)?))
+    return conn
+        .query_row(
+            "select * from customs where guild_id = ?1 and name = ?2",
+            params![guild_id, command_name],
+            |row| Ok(row.get(2)?),
+        )
         .optional()
         .unwrap();
 }
 
 // Get and format a list of all commands.
-fn get_list_of_commands(guildid: u64) -> String {
+fn get_list_of_commands(guild_id: u64) -> String {
     let conn = gen_connection();
     // Iterate over the rows and push each one's `name` with nice formatting.
 
     let mut stmt = conn
         .prepare("select * from customs where guild_id = ?1")
         .unwrap();
-    let rows = stmt.query_map(params![guildid], |row| row.get(1)).unwrap();
+    let rows = stmt.query_map(params![guild_id], |row| row.get(1)).unwrap();
     let mut commands_vec: Vec<String> = Vec::new();
     for command_result in rows {
         commands_vec.push(command_result.unwrap());
@@ -233,11 +239,14 @@ fn get_list_of_commands(guildid: u64) -> String {
     let mut commands = String::new();
     let mut i = 1;
 
-    for command in commands_vec.iter() {
-        let to_push = format!("{}: **{}**\n", i, command);
-        commands.push_str(to_push.as_str());
-        i += 1;
+    if commands_vec.len() > 0 {
+        for command in commands_vec.iter() {
+            let to_push = format!("{}: **{}**\n", i, command);
+            commands.push_str(to_push.as_str());
+            i += 1;
+        }
+    } else {
+        commands.push_str("There are no custom commands on this server. Add some with `^custom`.")
     }
-
     return commands;
 }

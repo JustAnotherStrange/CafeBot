@@ -18,10 +18,10 @@ use database::database::db_init;
 use message_change::{owo::*, sarcasm::*, say::*};
 use misc::{bruh::*, count::*, dice::*, game::*, hair::*, tictactoe::*, zote::*};
 use money::{
-    blackjack::*, coinflip::*, daily::*, give::*, leaderboard::*, money::*, stats::*, rps::*,
-    scratchoff::*, shop::*,
+    blackjack::*, coinflip::*, daily::*, give::*, leaderboard::*, money::*, rps::*, scratchoff::*,
+    shop::*,
 };
-use tools::{custom::*, help::*, latency::*, ping::*, profile::*, wiki::*, xkcd::*};
+use tools::{custom::*, help::*, latency::*, ping::*, profile::*, stats::*, wiki::*, xkcd::*};
 
 mod admin;
 mod database;
@@ -112,7 +112,7 @@ impl EventHandler for Handler {
             Some(Activity::playing("vid eo g ame s")),
             OnlineStatus::Online,
         )
-        .await; // set status to "Playing vid eo g ame s" - other Activity::* - listening, competing, streaming
+        .await; // set status to "Playing vid eo g ame s" - other Activity::* - listening, competing, streaming, watching
     }
 }
 

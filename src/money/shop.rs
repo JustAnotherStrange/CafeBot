@@ -1,7 +1,7 @@
-use crate::database::database::{
-    create_user_if_not_exist, gen_connection, get_incr_amount, get_money,
+use crate::{
+    database::database::{create_user_if_not_exist, gen_connection, get_incr_amount, get_money},
+    money::blackjack::edit_embed,
 };
-use crate::money::blackjack::edit_embed;
 use rusqlite::params;
 use serenity::{
     framework::standard::{macros::command, CommandResult},
@@ -13,6 +13,7 @@ use std::time::Duration;
 #[command]
 async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
     let conn = gen_connection();
+    create_user_if_not_exist(&msg.author, &conn)?;
     // reply a message first and edit it with the embed, as a workaround to make the embed message be a reply
     let response = format!("**{}** entered the shop!", &msg.author.name);
     let mut message = msg.reply(&ctx.http, &response).await?;
