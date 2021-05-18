@@ -9,7 +9,7 @@ use serenity::{
 };
 
 #[command]
-#[only_in(guilds)]
+// #[only_in(guilds)]
 #[aliases("inventory, inv")]
 async fn profile(ctx: &Context, msg: &Message) -> CommandResult {
     // let you check profile of other users
@@ -39,12 +39,15 @@ async fn profile(ctx: &Context, msg: &Message) -> CommandResult {
     let mut pfp_link = user.face();
     pfp_link.push_str("?size=16"); // for a smaller image
     let mut username = user.name.clone();
-    match user.nick_in(&ctx, msg.guild_id.unwrap()).await {
-        Some(x) => {
-            let str = format!("\n\"{}\"", x);
-            username.push_str(str.as_str())
+    // if the message is not private (in a guild), if they have a nickname, display it in their profile. Otherwise, don't.
+    if !msg.is_private() {
+        match user.nick_in(&ctx, msg.guild_id.unwrap()).await {
+            Some(x) => {
+                let str = format!("\n\"{}\"", x);
+                username.push_str(str.as_str())
+            }
+            None => {}
         }
-        None => {}
     }
     let desc = format!(
         "Monies: **{}**
