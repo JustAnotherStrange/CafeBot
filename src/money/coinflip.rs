@@ -1,6 +1,6 @@
 // Feed people's gambling addictions
 use crate::{
-    database::database::{gen_connection, get_money, money_increment},
+    database::database::{gen_connection, get_money, money_increment_with_lost},
     tools::stats::init_stats_if_necessary,
 };
 use rand::{thread_rng, Rng};
@@ -32,11 +32,11 @@ async fn coinflip(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         return Ok(());
     }
     if thread_rng().gen_bool(0.5) {
-        money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), bet)?;
+        money_increment_with_lost(&msg.author, msg.guild_id.unwrap().as_u64().clone(), bet)?;
         let response = format!("You got heads! You got **{}** monies.", bet);
         msg.reply(&ctx.http, response).await?;
     } else {
-        money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), -bet)?;
+        money_increment_with_lost(&msg.author, msg.guild_id.unwrap().as_u64().clone(), -bet)?;
         let response = format!("You got tails! You lost **{}** monies.", bet);
         msg.reply(&ctx.http, response).await?;
     }

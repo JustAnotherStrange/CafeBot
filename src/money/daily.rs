@@ -7,7 +7,7 @@ use serenity::{
     prelude::*,
 };
 
-use crate::database::database::{gen_connection, money_increment};
+use crate::database::database::{gen_connection, money_increment_with_lost};
 
 pub struct Daily {
     pub id: u64,
@@ -32,7 +32,8 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
                 "insert into daily values (?1, ?2, ?3)",
                 params![msg.author.id.as_u64(), date_string, 0],
             )?;
-            money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), 10).unwrap();
+            money_increment_with_lost(&msg.author, msg.guild_id.unwrap().as_u64().clone(), 10)
+                .unwrap();
             let response = format!("Daily complete! This is day 0. You got **10** monies.");
             msg.reply(&ctx.http, response).await?;
             return Ok(());
@@ -59,7 +60,7 @@ async fn daily(ctx: &Context, msg: &Message) -> CommandResult {
             } else {
                 to_increment = 500;
             };
-            money_increment(
+            money_increment_with_lost(
                 &msg.author,
                 msg.guild_id.unwrap().as_u64().clone(),
                 to_increment,

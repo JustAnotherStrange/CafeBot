@@ -6,7 +6,7 @@ use serenity::{
     prelude::Mentionable,
 };
 
-use crate::database::database::{get_money, money_increment};
+use crate::database::database::{get_money, money_increment_with_lost};
 
 #[command]
 #[aliases("give")]
@@ -41,8 +41,8 @@ async fn give_money(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
             .await?;
         return Ok(());
     }
-    money_increment(&mentions[0], msg.guild_id.unwrap().as_u64().clone(), amount)?;
-    money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), -amount)?;
+    money_increment_with_lost(&mentions[0], msg.guild_id.unwrap().as_u64().clone(), amount)?;
+    money_increment_with_lost(&msg.author, msg.guild_id.unwrap().as_u64().clone(), -amount)?;
     let response = format!(
         "{} has received **{}** monies from {}.",
         &mentions[0].mention(),

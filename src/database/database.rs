@@ -69,7 +69,7 @@ pub fn create_user_if_not_exist(user: &User, conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-pub fn money_increment(user: &User, guild_id: u64, amount: i32) -> Result<()> {
+pub fn money_increment_with_lost(user: &User, guild_id: u64, amount: i32) -> Result<()> {
     let conn = gen_connection();
     create_user_if_not_exist(&user, &conn)?;
     if amount.is_negative() {
@@ -82,7 +82,17 @@ pub fn money_increment(user: &User, guild_id: u64, amount: i32) -> Result<()> {
     Ok(())
 }
 
-fn lost_increment(guild_id: u64, amount: i32, conn: &Connection) -> Result<()> {
+pub fn money_increment_without_lost(user: &User, amount: i32) -> Result<()> {
+    let conn = gen_connection();
+    create_user_if_not_exist(&user, &conn)?;
+    conn.execute(
+        "update users set money = money + ?1 where id = ?2",
+        params![amount, user.id.as_u64()],
+    )?;
+    Ok(())
+}
+
+pub fn lost_increment(guild_id: u64, amount: i32, conn: &Connection) -> Result<()> {
     // create guild row if not exist
     conn.execute(
         "insert or ignore into pool values (?1, 0)",

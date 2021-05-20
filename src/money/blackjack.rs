@@ -1,7 +1,8 @@
 // play blackjack for money
 // All throughout: `msg` variable is the message the user sent, and `message` is the one the bot sent.
+use crate::database::database::{lost_increment, money_increment_without_lost};
 use crate::{
-    database::database::{gen_connection, get_money, money_increment},
+    database::database::{gen_connection, get_money, money_increment_with_lost},
     tools::stats::init_stats_if_necessary,
 };
 use rand::{seq::SliceRandom, thread_rng};
@@ -35,6 +36,9 @@ async fn blackjack(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             .await?;
         return Ok(());
     }
+
+    // subtract money from the beginning so no negative money
+    money_increment_without_lost(&msg.author, -bet)?;
 
     // reply a message first and edit it with the embed, as a workaround to make the embed message be a reply
     let response = format!(
@@ -71,7 +75,7 @@ async fn blackjack_engine(
     bet: i32,
 ) -> Result<(), Error> {
     let quarter_second = time::Duration::from_millis(250); // for sleeps later on
-    let mut deck = deckgen(); //
+    let mut deck = deck_gen(); //
 
     // deal the deck
     let mut hand1: Vec<usize> = Vec::new();
@@ -174,7 +178,8 @@ async fn blackjack_engine(
             } else {
                 // gets here if there were no reactions for 60 seconds.
                 let new_description = format!("One minute passed with no reactions, so the game ended with no results. As a result, you lost your bet, which was **{}** monies.", bet);
-                money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), -bet).unwrap();
+
+                lost_increment(*msg.guild_id.unwrap().as_u64(), bet, &gen_connection()).unwrap();
                 edit_embed(ctx, message, "Timed out.", &*new_description).await;
                 return Ok(()); // end the game
             }
@@ -210,7 +215,7 @@ async fn blackjack_engine(
             }
             edit_embed(ctx, message, "Blackjack!", "Blackjack!").await;
             sleep(Duration::from_millis(500));
-            player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet * 2).await;
+            player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet * 3).await;
             break;
         }
 
@@ -238,7 +243,9 @@ async fn blackjack_engine(
             if stay {
                 // this can probably be simplified.
                 match test_win(hand1.clone(), hand2.clone()).as_str() {
-                    "win" => player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await,
+                    "win" => {
+                        player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet * 2).await
+                    }
                     "lose" => {
                         dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await
                     }
@@ -266,7 +273,7 @@ async fn blackjack_engine(
             }
             edit_embed(ctx, message, "The dealer bust!", "The dealer bust!").await;
             sleep(quarter_second);
-            player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await;
+            player_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet * 2).await;
             break;
         } else if sum2 == 21 {
             if sum1 == 21 {
@@ -376,7 +383,7 @@ async fn player_win(
     msg: &Message,
     hand1: Vec<usize>,
     hand2: Vec<usize>,
-    bet: i32,
+    betx2: i32,
 ) {
     edit_embed(
         ctx,
@@ -385,8 +392,8 @@ async fn player_win(
         &*format_game_status(None, hand1.clone(), hand2.clone(), true),
     )
     .await;
-    money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), bet).unwrap();
-    let response = format!("You won **{}** monies.", bet);
+    money_increment_with_lost(&msg.author, msg.guild_id.unwrap().as_u64().clone(), betx2).unwrap();
+    let response = format!("You won **{}** monies.", betx2 / 2);
     msg.reply(&ctx.http, response).await.unwrap();
 }
 
@@ -405,7 +412,8 @@ async fn dealer_win(
         &*format_game_status(None, hand1.clone(), hand2.clone(), true),
     )
     .await;
-    money_increment(&msg.author, msg.guild_id.unwrap().as_u64().clone(), -bet).unwrap();
+    // money is already lost, so increment pool
+    lost_increment(*msg.guild_id.unwrap().as_u64(), bet, &gen_connection()).unwrap();
     let response = format!("You lost **{}** monies.", bet);
     msg.reply(&ctx.http, response).await.unwrap();
 }
@@ -420,7 +428,7 @@ async fn tie(ctx: &Context, message: &mut Message, hand1: Vec<usize>, hand2: Vec
 }
 
 // generate deck
-fn deckgen() -> Vec<usize> {
+fn deck_gen() -> Vec<usize> {
     let mut rng = thread_rng();
     let mut deck: Vec<usize> = Vec::new();
 

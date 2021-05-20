@@ -1,5 +1,5 @@
 // rock paper scissors game
-use crate::database::database::{get_money, money_increment};
+use crate::database::database::{get_money, money_increment_with_lost};
 use rand::{thread_rng, Rng};
 use rusqlite::Error;
 use serenity::{
@@ -92,7 +92,7 @@ async fn rockpaperscissors(ctx: &Context, msg: &Message, mut args: Args) -> Comm
     Ok(())
 }
 fn win(msg: &Message, comp_move: &str, to_increment: i32) -> Result<String, Error> {
-    money_increment(
+    money_increment_with_lost(
         &msg.author,
         msg.guild_id.unwrap().as_u64().clone(),
         to_increment,
@@ -103,7 +103,7 @@ fn win(msg: &Message, comp_move: &str, to_increment: i32) -> Result<String, Erro
     ));
 }
 fn lose(msg: &Message, comp_move: &str, to_subtract: i32) -> Result<String, Error> {
-    money_increment(
+    money_increment_with_lost(
         &msg.author,
         msg.guild_id.unwrap().as_u64().clone(),
         -to_subtract,

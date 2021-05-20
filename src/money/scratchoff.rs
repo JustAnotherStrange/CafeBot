@@ -1,5 +1,5 @@
 // use scratchoff tickets that are purchased in the shop
-use crate::database::database::{gen_connection, get_so, money_increment};
+use crate::database::database::{gen_connection, get_so, money_increment_with_lost};
 use crate::money::blackjack::edit_embed;
 use crate::tools::help::EditContent;
 use rand::{thread_rng, Rng};
@@ -161,7 +161,7 @@ async fn scratchoff(ctx: &Context, msg: &Message) -> CommandResult {
         _ => return Ok(()), // this should never be reached, but unreachable!() complains about return types of match arms
     };
     // give user the money they won
-    money_increment(
+    money_increment_with_lost(
         &msg.author,
         msg.guild_id.unwrap().as_u64().clone(),
         win_amount,
