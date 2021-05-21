@@ -13,6 +13,7 @@ use serenity::{
     Error,
 };
 use std::{thread::sleep, time, time::Duration};
+use serenity::model::user::User;
 
 #[command]
 #[only_in(guilds)]
@@ -210,7 +211,7 @@ async fn blackjack_engine(
             }
         } else if sum1 == 21 {
             if sum2 == 21 {
-                tie(ctx, message, hand1, hand2).await;
+                tie(ctx, message, hand1, hand2, &msg.author, bet).await;
                 return Ok(());
             }
             edit_embed(ctx, message, "Blackjack!", "Blackjack!").await;
@@ -249,7 +250,7 @@ async fn blackjack_engine(
                     "lose" => {
                         dealer_win(ctx, message, msg, hand1.clone(), hand2.clone(), bet).await
                     }
-                    "tie" => tie(ctx, message, hand1, hand2).await,
+                    "tie" => tie(ctx, message, hand1, hand2, &msg.author, bet).await,
                     _ => {}
                 }
                 break;
@@ -277,7 +278,7 @@ async fn blackjack_engine(
             break;
         } else if sum2 == 21 {
             if sum1 == 21 {
-                tie(ctx, message, hand1, hand2).await;
+                tie(ctx, message, hand1, hand2, &msg.author, bet).await;
                 return Ok(());
             }
             edit_embed(
@@ -417,7 +418,8 @@ async fn dealer_win(
     let response = format!("You lost **{}** monies.", bet);
     msg.reply(&ctx.http, response).await.unwrap();
 }
-async fn tie(ctx: &Context, message: &mut Message, hand1: Vec<usize>, hand2: Vec<usize>) {
+async fn tie(ctx: &Context, message: &mut Message, hand1: Vec<usize>, hand2: Vec<usize>, user: &User, bet: i32) {
+    money_increment_without_lost(&user, bet).unwrap();
     edit_embed(
         ctx,
         message,
